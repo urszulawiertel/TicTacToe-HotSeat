@@ -16,9 +16,35 @@ enum Player: String {
     }
 }
 
+enum GameState: Equatable {
+    case playing(current: Player)
+    case win(Player)
+    case draw
+
+    var statusText: String {
+        switch self {
+        case .playing(let current):
+            return "Current: \(current.rawValue)"
+        case .win(let winner):
+            return "\(winner.rawValue) wins!"
+        case .draw:
+            return "Draw!"
+        }
+    }
+
+    var isGameOver: Bool {
+        switch self {
+        case .playing:
+            return false
+        case .win, .draw:
+            return true
+        }
+    }
+}
+
 struct ContentView: View {
     @State private var board: [Player?] = Array(repeating: nil, count: 9)
-    @State private var currentPlayer: Player = .x
+    @State private var state: GameState = .playing(current: .x)
 
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 12),
@@ -26,15 +52,28 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
+    private let winningLines: [[Int]] = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ]
+
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
-                Text("Current: \(currentPlayer.rawValue)")
+
+                Text(state.statusText)
                     .font(.headline)
 
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(symbol: board[index]?.rawValue)
+                            .opacity(state.isGameOver ? 0.6 : 1.0)
                             .onTapGesture {
                                 handleTap(at: index)
                             }
@@ -55,15 +94,48 @@ struct ContentView: View {
     }
 
     private func handleTap(at index: Int) {
+        // 1) Don't play like game over
+        guard case .playing(let currentPlayer) = state else { return }
+
+        // 2) Don't overwrite the occupied field
         guard board[index] == nil else { return }
 
+        // 3) Move
         board[index] = currentPlayer
-        currentPlayer.toggle()
+
+        // 4) Check win / draw
+        if isWinner(currentPlayer) {
+            state = .win(currentPlayer)
+            return
+        }
+
+        if board.allSatisfy({ $0 != nil }) {
+            state = .draw
+            return
+        }
+
+        // 5) Change player
+        var next = currentPlayer
+        next.toggle()
+        state = .playing(current: next)
+    }
+
+    private func isWinner(_ player: Player) -> Bool {
+        for line in winningLines {
+            let a = board[line[0]]
+            let b = board[line[1]]
+            let c = board[line[2]]
+
+            if a == player && b == player && c == player {
+                return true
+            }
+        }
+        return false
     }
 
     private func reset() {
         board = Array(repeating: nil, count: 9)
-        currentPlayer = .x
+        state = .playing(current: .x)
     }
 }
 
