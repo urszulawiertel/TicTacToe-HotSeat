@@ -18,14 +18,14 @@ enum Player: String {
 
 enum GameState: Equatable {
     case playing(current: Player)
-    case win(Player)
+    case win(Player, line: [Int])
     case draw
 
     var statusText: String {
         switch self {
         case .playing(let current):
             return "Current: \(current.rawValue)"
-        case .win(let winner):
+        case .win(let winner, _):
             return "\(winner.rawValue) wins!"
         case .draw:
             return "Draw!"
@@ -72,7 +72,7 @@ struct ContentView: View {
 
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
-                        CellView(symbol: board[index]?.rawValue)
+                        CellView(symbol: board[index]?.rawValue, isHighlighted: isHighlightedCell(index))
                             .opacity(state.isGameOver ? 0.6 : 1.0)
                             .onTapGesture {
                                 handleTap(at: index)
@@ -104,8 +104,8 @@ struct ContentView: View {
         board[index] = currentPlayer
 
         // 4) Check win / draw
-        if isWinner(currentPlayer) {
-            state = .win(currentPlayer)
+        if let line = winningLine(currentPlayer) {
+            state = .win(currentPlayer, line: line)
             return
         }
 
@@ -120,17 +120,23 @@ struct ContentView: View {
         state = .playing(current: next)
     }
 
-    private func isWinner(_ player: Player) -> Bool {
+    private func winningLine(_ player: Player) -> [Int]? {
         for line in winningLines {
             let a = board[line[0]]
             let b = board[line[1]]
             let c = board[line[2]]
 
             if a == player && b == player && c == player {
-                return true
+                return line
             }
         }
-        return false
+        return nil
+    }
+
+    private func isHighlightedCell(_ index: Int) -> Bool {
+        guard case .win(_, let line) = state else { return false }
+        return line.contains(index)
+
     }
 
     private func reset() {
@@ -141,11 +147,12 @@ struct ContentView: View {
 
 struct CellView: View {
     let symbol: String?
+    let isHighlighted: Bool
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 16)
-                .stroke(lineWidth: 2)
+                .stroke(lineWidth: isHighlighted ? 6 : 2)
                 .frame(height: 90)
 
             Text(symbol ?? "")
