@@ -7,52 +7,10 @@
 
 import SwiftUI
 
-enum Player: String {
-    case x = "X"
-    case o = "O"
-
-    mutating func toggle() {
-        self = (self == .x) ? .o : .x
-    }
-}
-
-enum GameState: Equatable {
-    case playing(current: Player)
-    case win(Player, line: [Int])
-    case draw
-
-    var statusText: String {
-        switch self {
-        case .playing(let current):
-            return "Current: \(current.rawValue)"
-        case .win(let winner, _):
-            return "\(winner.rawValue) wins!"
-        case .draw:
-            return "Draw!"
-        }
-    }
-
-    var isGameOver: Bool {
-        switch self {
-        case .playing:
-            return false
-        case .win, .draw:
-            return true
-        }
-    }
-}
-
 struct ContentView: View {
-    @State private var board: [Player?] = Array(repeating: nil, count: 9)
-    @State private var state: GameState = .playing(current: .x)
-    @State private var xScore = 0
-    @State private var oScore = 0
-    @State private var secondsLeft: Int = 10
-    @State private var timerEnabled: Bool = true
+    @StateObject private var game = TicTacToeEngine(moveTimeLimit: 10)
 
-    private let moveTimeLimit = 10
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
 
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 12),
@@ -60,46 +18,35 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
-    private let winningLines: [[Int]] = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ]
-
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
 
-                Text(state.statusText)
+                Text(game.state.statusText)
                     .font(.headline)
 
                 HStack(spacing: 24) {
-                    Text("X: \(xScore)")
-                    Text("O: \(oScore)")
+                    Text("X: \(game.xScore)")
+                    Text("O: \(game.oScore)")
                 }
                 .font(.subheadline)
 
                 HStack(spacing: 32) {
-                    Text("Time: \(secondsLeft)s")
+                    Text("Time: \(game.secondsLeft)s")
                         .font(.subheadline)
 
-                    Button(timerEnabled ? "Pause Timer" : "Resume Timer") {
-                        timerEnabled.toggle()
+                    Button(game.timerEnabled ? "Pause Timer" : "Resume Timer") {
+                        game.toggleTimer()
                     }
                     .buttonStyle(.bordered)
                 }
 
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
-                        CellView(symbol: board[index]?.rawValue, isHighlighted: isHighlightedCell(index))
-                            .opacity(state.isGameOver ? 0.6 : 1.0)
+                        CellView(symbol: game.board[index]?.rawValue, isHighlighted: game.isHighlightedCell(index))
+                            .opacity(game.state.isGameOver ? 0.6 : 1.0)
                             .onTapGesture {
-                                handleTap(at: index)
+                                game.handleTap(at: index)
                             }
                     }
                 }
@@ -107,20 +54,18 @@ struct ContentView: View {
 
                 HStack(spacing: 12) {
                     Button("Reset") {
-                        reset()
+                        game.resetBoard()
                     }
                     .buttonStyle(.borderedProminent)
 
                     Button("Reset Score") {
-                        xScore = 0
-                        oScore = 0
-                        reset()
+                        game.resetScore()
                     }
                     .buttonStyle(.bordered)
                 }
 
                 .onReceive(timer) { _ in
-                    tick()
+                    game.tick()
                 }
 
                 Spacer()
@@ -128,77 +73,6 @@ struct ContentView: View {
             .padding(.top, 24)
             .navigationTitle("Tic-Tac-Toe")
         }
-    }
-
-    private func handleTap(at index: Int) {
-        // 1) Don't play like game over
-        guard case .playing(let currentPlayer) = state else { return }
-
-        // 2) Don't overwrite the occupied field
-        guard board[index] == nil else { return }
-
-        // 3) Move
-        board[index] = currentPlayer
-
-        // 4) Check win / draw
-        if let line = winningLine(currentPlayer) {
-            if currentPlayer == .x { xScore += 1 }
-            if currentPlayer == .o { oScore += 1 }
-            state = .win(currentPlayer, line: line)
-            return
-        }
-
-        if board.allSatisfy({ $0 != nil }) {
-            state = .draw
-            return
-        }
-
-        // 5) Change player
-        var next = currentPlayer
-        next.toggle()
-        state = .playing(current: next)
-        secondsLeft = moveTimeLimit
-    }
-
-    private func winningLine(_ player: Player) -> [Int]? {
-        for line in winningLines {
-            let a = board[line[0]]
-            let b = board[line[1]]
-            let c = board[line[2]]
-
-            if a == player && b == player && c == player {
-                return line
-            }
-        }
-        return nil
-    }
-
-    private func tick() {
-        guard timerEnabled else { return }
-        guard case .playing(let currentPlayer) = state else { return }
-
-        if secondsLeft > 0 {
-            secondsLeft -= 1
-        }
-
-        if secondsLeft == 0 {
-            var next = currentPlayer
-            next.toggle()
-            state = .playing(current: next)
-            secondsLeft = moveTimeLimit
-        }
-    }
-
-    private func isHighlightedCell(_ index: Int) -> Bool {
-        guard case .win(_, let line) = state else { return false }
-        return line.contains(index)
-
-    }
-
-    private func reset() {
-        board = Array(repeating: nil, count: 9)
-        state = .playing(current: .x)
-        secondsLeft = moveTimeLimit
     }
 }
 
