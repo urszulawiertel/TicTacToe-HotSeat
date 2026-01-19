@@ -47,6 +47,12 @@ struct ContentView: View {
     @State private var state: GameState = .playing(current: .x)
     @State private var xScore = 0
     @State private var oScore = 0
+    @State private var secondsLeft: Int = 10
+    @State private var timerEnabled: Bool = true
+
+    private let moveTimeLimit = 10
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
 
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 12),
@@ -78,6 +84,16 @@ struct ContentView: View {
                 }
                 .font(.subheadline)
 
+                HStack(spacing: 32) {
+                    Text("Time: \(secondsLeft)s")
+                        .font(.subheadline)
+
+                    Button(timerEnabled ? "Pause Timer" : "Resume Timer") {
+                        timerEnabled.toggle()
+                    }
+                    .buttonStyle(.bordered)
+                }
+
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(symbol: board[index]?.rawValue, isHighlighted: isHighlightedCell(index))
@@ -101,6 +117,10 @@ struct ContentView: View {
                         reset()
                     }
                     .buttonStyle(.bordered)
+                }
+
+                .onReceive(timer) { _ in
+                    tick()
                 }
 
                 Spacer()
@@ -137,6 +157,7 @@ struct ContentView: View {
         var next = currentPlayer
         next.toggle()
         state = .playing(current: next)
+        secondsLeft = moveTimeLimit
     }
 
     private func winningLine(_ player: Player) -> [Int]? {
@@ -152,6 +173,22 @@ struct ContentView: View {
         return nil
     }
 
+    private func tick() {
+        guard timerEnabled else { return }
+        guard case .playing(let currentPlayer) = state else { return }
+
+        if secondsLeft > 0 {
+            secondsLeft -= 1
+        }
+
+        if secondsLeft == 0 {
+            var next = currentPlayer
+            next.toggle()
+            state = .playing(current: next)
+            secondsLeft = moveTimeLimit
+        }
+    }
+
     private func isHighlightedCell(_ index: Int) -> Bool {
         guard case .win(_, let line) = state else { return false }
         return line.contains(index)
@@ -161,6 +198,7 @@ struct ContentView: View {
     private func reset() {
         board = Array(repeating: nil, count: 9)
         state = .playing(current: .x)
+        secondsLeft = moveTimeLimit
     }
 }
 
