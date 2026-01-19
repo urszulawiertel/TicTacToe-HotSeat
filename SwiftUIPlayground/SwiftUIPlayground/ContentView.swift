@@ -45,6 +45,8 @@ enum GameState: Equatable {
 struct ContentView: View {
     @State private var board: [Player?] = Array(repeating: nil, count: 9)
     @State private var state: GameState = .playing(current: .x)
+    @State private var xScore = 0
+    @State private var oScore = 0
 
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 12),
@@ -70,6 +72,12 @@ struct ContentView: View {
                 Text(state.statusText)
                     .font(.headline)
 
+                HStack(spacing: 24) {
+                    Text("X: \(xScore)")
+                    Text("O: \(oScore)")
+                }
+                .font(.subheadline)
+
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(symbol: board[index]?.rawValue, isHighlighted: isHighlightedCell(index))
@@ -81,10 +89,19 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
 
-                Button("Reset") {
-                    reset()
+                HStack(spacing: 12) {
+                    Button("Reset") {
+                        reset()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button("Reset Score") {
+                        xScore = 0
+                        oScore = 0
+                        reset()
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.borderedProminent)
 
                 Spacer()
             }
@@ -105,6 +122,8 @@ struct ContentView: View {
 
         // 4) Check win / draw
         if let line = winningLine(currentPlayer) {
+            if currentPlayer == .x { xScore += 1 }
+            if currentPlayer == .o { oScore += 1 }
             state = .win(currentPlayer, line: line)
             return
         }
