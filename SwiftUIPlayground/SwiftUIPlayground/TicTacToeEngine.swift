@@ -75,7 +75,7 @@ final class TicTacToeEngine: ObservableObject {
 
     // MARK: - Game actions
 
-    func handleTap(at index: Int) {
+    func makeMove(at index: Int) {
         // 1) Don't play like game over
         guard case .playing(let currentPlayer) = state else { return }
 

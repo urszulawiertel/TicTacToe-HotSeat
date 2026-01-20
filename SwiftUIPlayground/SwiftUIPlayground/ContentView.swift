@@ -46,7 +46,7 @@ struct ContentView: View {
                         CellView(symbol: game.board[index]?.rawValue, isHighlighted: game.isHighlightedCell(index))
                             .opacity(game.state.isGameOver ? 0.6 : 1.0)
                             .onTapGesture {
-                                game.handleTap(at: index)
+                                game.makeMove(at: index)
                             }
                     }
                 }
