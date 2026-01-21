@@ -50,11 +50,10 @@ final class TicTacToeEngine: ObservableObject {
     @Published private(set) var state: GameState = .playing(current: .x)
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
+    @Published private(set) var moveTimeLimit: Int
 
     @Published private(set) var xScore: Int = 0
     @Published private(set) var oScore: Int = 0
-
-    private let moveTimeLimit: Int
 
     private let winningLines: [[Int]] = [
         [0, 1, 2],
@@ -136,6 +135,12 @@ final class TicTacToeEngine: ObservableObject {
     func toggleTimer() {
         timerEnabled.toggle()
     }
+
+    func setMoveTimeLimit(_ newValue: Int) {
+        moveTimeLimit = newValue
+        resetBoard()
+    }
+
 
     // MARK: - Helpers
 

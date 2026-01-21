@@ -105,4 +105,14 @@ final class TicTacToeGameTests: XCTestCase {
         game.tick()
         XCTAssertEqual(game.secondsLeft, before)
     }
+
+    func testChangingMoveTimeLimitResetsTimer() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.tick()
+        XCTAssertEqual(game.secondsLeft, 9)
+
+        game.setMoveTimeLimit(5)
+        XCTAssertEqual(game.moveTimeLimit, 5)
+        XCTAssertEqual(game.secondsLeft, 5)
+    }
 }

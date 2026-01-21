@@ -8,7 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var game = TicTacToeEngine(moveTimeLimit: 10)
+    @StateObject private var game = TicTacToeEngine()
+    @State private var selectedTimeLimit: Int
+
+    private let defaultTimeLimit = 10
+
+    init() {
+        let limit = defaultTimeLimit
+        _selectedTimeLimit = State(initialValue: limit)
+        _game = StateObject(wrappedValue: TicTacToeEngine(moveTimeLimit: limit))
+    }
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -39,6 +48,17 @@ struct ContentView: View {
                         game.toggleTimer()
                     }
                     .buttonStyle(.bordered)
+                }
+
+                Picker("Move time", selection: $selectedTimeLimit) {
+                    Text("5s").tag(5)
+                    Text("10s").tag(10)
+                    Text("15s").tag(15)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .onChange(of: selectedTimeLimit) { newValue in
+                    game.setMoveTimeLimit(newValue)
                 }
 
                 LazyVGrid(columns: columns, spacing: 12) {
