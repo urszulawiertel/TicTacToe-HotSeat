@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var game = TicTacToeEngine()
     @State private var selectedTimeLimit: Int
+    @State private var showGameOverAlert = false
 
     private let defaultTimeLimit = 10
 
@@ -92,10 +93,30 @@ struct ContentView: View {
                     game.tick()
                 }
 
+                .alert("Game Over", isPresented: $showGameOverAlert) {
+                    Button("Play Again") {
+                        game.resetBoard()
+                    }
+
+                    Button("Reset Score", role: .destructive) {
+                        game.resetScore()
+                    }
+
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text(game.state.statusText)
+                }
+
                 Spacer()
             }
             .padding(.top, 24)
             .navigationTitle("Tic-Tac-Toe")
+
+            .onChange(of: game.state) { newState in
+                if newState.isGameOver {
+                    showGameOverAlert = true
+                }
+            }
         }
     }
 }
