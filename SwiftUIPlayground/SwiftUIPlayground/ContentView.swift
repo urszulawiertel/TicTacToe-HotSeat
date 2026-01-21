@@ -40,13 +40,17 @@ struct ContentView: View {
                 }
                 .font(.subheadline)
 
-                HStack(spacing: 32) {
+                HStack(spacing: 12) {
                     Text("Time: \(game.secondsLeft)s")
-                        .font(.subheadline)
+                        .font(.subheadline.monospacedDigit())
+                        .frame(width: 90, alignment: .leading)
 
-                    Button(game.timerEnabled ? "Pause Timer" : "Resume Timer") {
+                    Button {
                         game.toggleTimer()
+                    } label: {
+                        Label("Timer", systemImage: game.timerEnabled ? "pause.fill" : "play.fill")
                     }
+                    .frame(width: 120)
                     .buttonStyle(.bordered)
                 }
 
