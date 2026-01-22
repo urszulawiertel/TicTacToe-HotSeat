@@ -9,7 +9,9 @@ import Foundation
 
 final class TicTacToeEngine: ObservableObject {
 
-    enum Player: String {
+    // MARK: - Types
+
+    enum Player: String, Equatable {
         case x = "X"
         case o = "O"
 
@@ -50,9 +52,12 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     // MARK: - Public state (UI reads this)
+
     @Published private(set) var board: [Player?] = Array(repeating: nil, count: 9)
     @Published private(set) var state: GameState = .playing(current: .x)
+
     @Published private(set) var matchState: MatchState = .inProgress
+
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
     @Published private(set) var moveTimeLimit: Int
@@ -61,7 +66,9 @@ final class TicTacToeEngine: ObservableObject {
     @Published private(set) var oScore: Int = 0
     @Published private(set) var targetScore: Int = 3
 
-    private let winningLines: [[Int]] = [
+    // MARK: - Constants
+
+    private static let winningLines: [[Int]] = [
         [0, 1, 2],
         [3, 4, 5],
         [6, 7, 8],
@@ -72,6 +79,7 @@ final class TicTacToeEngine: ObservableObject {
         [2, 4, 6]
     ]
 
+    // MARK: - Init
 
     init(moveTimeLimit: Int = 10) {
         self.moveTimeLimit = moveTimeLimit
@@ -81,38 +89,45 @@ final class TicTacToeEngine: ObservableObject {
     // MARK: - Game actions
 
     func makeMove(at index: Int) {
+        // Match must be active
         guard matchState == .inProgress else { return }
-        // 1) Don't play like game over
+
+        // Index must be valid
+        guard (0..<board.count).contains(index) else { return }
+
+        // Game must be playable
         guard case .playing(let currentPlayer) = state else { return }
 
-        // 2) Don't overwrite the occupied field
+        // Cell must be empty
         guard board[index] == nil else { return }
 
-        // 3) Move
         board[index] = currentPlayer
 
-        // 4) Check win / draw
-        if let line = winningLine(currentPlayer) {
+        // Win?
+        if let line = winningLine(for: currentPlayer) {
             incrementScore(for: currentPlayer)
             state = .win(currentPlayer, line: line)
-
             checkForMatchWinner()
             return
         }
 
+        // Draw?
         if board.allSatisfy({ $0 != nil }) {
             state = .draw
             return
         }
 
-        // 5) Change player
+        // Next turn
         var next = currentPlayer
         next.toggle()
         state = .playing(current: next)
+
+        // Successful move resets timer
         secondsLeft = moveTimeLimit
     }
 
     func tick() {
+        guard matchState == .inProgress else { return }
         guard timerEnabled else { return }
         guard case .playing(let currentPlayer) = state else { return }
 
@@ -143,9 +158,7 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     func resetScore() {
-        xScore = 0
-        oScore = 0
-        resetBoard()
+        newMatch()
     }
 
     func toggleTimer() {
@@ -162,14 +175,14 @@ final class TicTacToeEngine: ObservableObject {
         resetScore()
     }
 
-    // MARK: - Helpers
-
+    // MARK: - UI helpers
 
     func isHighlightedCell(_ index: Int) -> Bool {
         guard case .win(_, let line) = state else { return false }
         return line.contains(index)
-
     }
+
+    // MARK: - Private helpers
 
     private func checkForMatchWinner() {
         if xScore >= targetScore {
@@ -179,8 +192,8 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
-    private func winningLine(_ player: Player) -> [Int]? {
-        for line in winningLines {
+    private func winningLine(for player: Player) -> [Int]? {
+        for line in Self.winningLines {
             let a = board[line[0]]
             let b = board[line[1]]
             let c = board[line[2]]
@@ -191,7 +204,7 @@ final class TicTacToeEngine: ObservableObject {
         }
         return nil
     }
-    
+
     private func incrementScore(for player: Player) {
         if player == .x { xScore += 1 }
         else { oScore += 1 }
