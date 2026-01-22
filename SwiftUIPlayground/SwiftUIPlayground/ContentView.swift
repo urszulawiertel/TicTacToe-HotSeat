@@ -42,32 +42,17 @@ struct ContentView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 16) {
-                Text(game.state.statusText)
-                    .font(.headline)
+            VStack(spacing: 14) {
 
-                Text("First to \(game.targetScore)")
-                    .font(.caption)
-
-                HStack(spacing: 24) {
-                    Text("X: \(game.xScore)")
-                    Text("O: \(game.oScore)")
-                }
-                .font(.subheadline)
-
-                HStack(spacing: 12) {
-                    Text("Time: \(game.secondsLeft)s")
-                        .font(.subheadline.monospacedDigit())
-                        .frame(width: 90, alignment: .leading)
-
-                    Button {
-                        game.toggleTimer()
-                    } label: {
-                        Label("Timer", systemImage: game.timerEnabled ? "pause.fill" : "play.fill")
-                    }
-                    .frame(width: 120)
-                    .buttonStyle(.bordered)
-                }
+                HeaderView(
+                    statusText: game.state.statusText,
+                    targetScore: game.targetScore,
+                    xScore: game.xScore,
+                    oScore: game.oScore,
+                    secondsLeft: game.secondsLeft,
+                    timerEnabled: game.timerEnabled,
+                    onToggleTimer: { game.toggleTimer() }
+                )
 
                 Picker("Move time", selection: $selectedTimeLimit) {
                     Text("5s").tag(5)
@@ -159,6 +144,57 @@ struct ContentView: View {
                 }
             }
         }
+    }
+}
+
+private struct HeaderView: View {
+    let statusText: String
+    let targetScore: Int
+    let xScore: Int
+    let oScore: Int
+    let secondsLeft: Int
+    let timerEnabled: Bool
+    let onToggleTimer: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(statusText)
+                    .font(.headline)
+
+                Spacer()
+
+                Text("First to \(targetScore)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                HStack(spacing: 16) {
+                    Text("X: \(xScore)")
+                    Text("O: \(oScore)")
+                }
+                .font(.subheadline)
+
+                Spacer()
+
+                HStack(spacing: 10) {
+                    Text("\(secondsLeft)s")
+                        .font(.subheadline.monospacedDigit())
+                        .frame(width: 40, alignment: .trailing)
+
+                    Button(action: onToggleTimer) {
+                        Image(systemName: timerEnabled ? "pause.fill" : "play.fill")
+                            .frame(width: 18, height: 18)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .padding(.horizontal)
     }
 }
 
