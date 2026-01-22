@@ -11,6 +11,7 @@ struct ContentView: View {
     @StateObject private var game = TicTacToeEngine()
     @State private var selectedTimeLimit: Int
     @State private var showGameOverAlert = false
+    @State private var showMatchOverAlert = false
 
     private let defaultTimeLimit = 10
 
@@ -34,6 +35,9 @@ struct ContentView: View {
 
                 Text(game.state.statusText)
                     .font(.headline)
+
+                Text("Best of \(game.targetScore)")
+                    .font(.caption)
 
                 HStack(spacing: 24) {
                     Text("X: \(game.xScore)")
@@ -107,14 +111,32 @@ struct ContentView: View {
                     Text(game.state.statusText)
                 }
 
+                .alert("Match Over", isPresented: $showMatchOverAlert) {
+                    Button("New Match") {
+                        game.newMatch()
+                    }
+                } message: {
+                    if case .finished(let winner) = game.matchState {
+                        Text("\(winner.rawValue) wins the match!")
+                    }
+                }
+
                 Spacer()
             }
             .padding(.top, 24)
             .navigationTitle("Tic-Tac-Toe")
 
             .onChange(of: game.state) { newState in
+                guard game.matchState == .inProgress else { return }
                 if newState.isGameOver {
                     showGameOverAlert = true
+                }
+            }
+
+            .onChange(of: game.matchState) { newValue in
+                if case .finished = newValue {
+                    showGameOverAlert = false
+                    showMatchOverAlert = true
                 }
             }
         }

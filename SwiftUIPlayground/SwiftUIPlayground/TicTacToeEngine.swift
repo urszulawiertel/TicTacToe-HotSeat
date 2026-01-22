@@ -44,16 +44,22 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
+    enum MatchState: Equatable {
+        case inProgress
+        case finished(winner: Player)
+    }
 
     // MARK: - Public state (UI reads this)
     @Published private(set) var board: [Player?] = Array(repeating: nil, count: 9)
     @Published private(set) var state: GameState = .playing(current: .x)
+    @Published private(set) var matchState: MatchState = .inProgress
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
     @Published private(set) var moveTimeLimit: Int
 
     @Published private(set) var xScore: Int = 0
     @Published private(set) var oScore: Int = 0
+    @Published private(set) var targetScore: Int = 3
 
     private let winningLines: [[Int]] = [
         [0, 1, 2],
@@ -75,6 +81,7 @@ final class TicTacToeEngine: ObservableObject {
     // MARK: - Game actions
 
     func makeMove(at index: Int) {
+        guard matchState == .inProgress else { return }
         // 1) Don't play like game over
         guard case .playing(let currentPlayer) = state else { return }
 
@@ -88,6 +95,8 @@ final class TicTacToeEngine: ObservableObject {
         if let line = winningLine(currentPlayer) {
             incrementScore(for: currentPlayer)
             state = .win(currentPlayer, line: line)
+
+            checkForMatchWinner()
             return
         }
 
@@ -119,6 +128,13 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
+    func newMatch() {
+        xScore = 0
+        oScore = 0
+        matchState = .inProgress
+        resetBoard()
+    }
+
     func resetBoard() {
         timerEnabled = true
         board = Array(repeating: nil, count: 9)
@@ -141,6 +157,10 @@ final class TicTacToeEngine: ObservableObject {
         resetBoard()
     }
 
+    func setTargetScore(_ value: Int) {
+        targetScore = value
+        resetScore()
+    }
 
     // MARK: - Helpers
 
@@ -149,6 +169,14 @@ final class TicTacToeEngine: ObservableObject {
         guard case .win(_, let line) = state else { return false }
         return line.contains(index)
 
+    }
+
+    private func checkForMatchWinner() {
+        if xScore >= targetScore {
+            matchState = .finished(winner: .x)
+        } else if oScore >= targetScore {
+            matchState = .finished(winner: .o)
+        }
     }
 
     private func winningLine(_ player: Player) -> [Int]? {

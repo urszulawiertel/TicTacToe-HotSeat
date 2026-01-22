@@ -115,4 +115,35 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(game.moveTimeLimit, 5)
         XCTAssertEqual(game.secondsLeft, 5)
     }
+
+    func testMatchFinishesWhenXReachesTargetScore() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setTargetScore(1)
+
+        game.makeMove(at: 0)
+        game.makeMove(at: 3)
+        game.makeMove(at: 1)
+        game.makeMove(at: 4)
+        game.makeMove(at: 2) // X wins round -> match should finish
+
+        if case .finished(let winner) = game.matchState {
+            XCTAssertEqual(winner, .x)
+        } else {
+            XCTFail("Expected match finished")
+        }
+    }
+
+    func testCannotMoveAfterMatchFinished() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setTargetScore(1)
+
+        game.makeMove(at: 0)
+        game.makeMove(at: 3)
+        game.makeMove(at: 1)
+        game.makeMove(at: 4)
+        game.makeMove(at: 2)
+
+        game.makeMove(at: 5) // should be ignored
+        XCTAssertNil(game.board[5])
+    }
 }
