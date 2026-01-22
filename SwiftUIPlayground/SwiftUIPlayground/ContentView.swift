@@ -10,8 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var game = TicTacToeEngine()
     @State private var selectedTimeLimit: Int
-    @State private var showGameOverAlert = false
-    @State private var showMatchOverAlert = false
+    @State private var activeAlert: ActiveAlert?
 
     private let defaultTimeLimit = 10
 
@@ -28,6 +27,18 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
+
+    private enum ActiveAlert: Identifiable {
+        case gameOver
+        case matchOver
+
+        var id: String {
+            switch self {
+            case .gameOver: return "gameOver"
+            case .matchOver: return "matchOver"
+            }
+        }
+    }
 
     var body: some View {
         NavigationView {
@@ -97,27 +108,35 @@ struct ContentView: View {
                     game.tick()
                 }
 
-                .alert("Game Over", isPresented: $showGameOverAlert) {
-                    Button("Play Again") {
-                        game.resetBoard()
-                    }
+                .alert(item: $activeAlert) { alert in
+                    switch alert {
+                    case .gameOver:
+                        return Alert(
+                            title: Text("Game Over"),
+                            message: Text(game.state.statusText),
+                            primaryButton: .default(Text("Play Again")) {
+                                game.resetBoard()
+                            },
+                            secondaryButton: .destructive(Text("Reset Score")) {
+                                game.resetScore()
+                            }
+                        )
 
-                    Button("Reset Score", role: .destructive) {
-                        game.resetScore()
-                    }
+                    case .matchOver:
+                        let winnerText: String = {
+                            if case .finished(let winner) = game.matchState {
+                                return "\(winner.rawValue) wins the match!"
+                            }
+                            return "Match finished"
+                        }()
 
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text(game.state.statusText)
-                }
-
-                .alert("Match Over", isPresented: $showMatchOverAlert) {
-                    Button("New Match") {
-                        game.newMatch()
-                    }
-                } message: {
-                    if case .finished(let winner) = game.matchState {
-                        Text("\(winner.rawValue) wins the match!")
+                        return Alert(
+                            title: Text("Match Over"),
+                            message: Text(winnerText),
+                            dismissButton: .default(Text("New Match")) {
+                                game.newMatch()
+                            }
+                        )
                     }
                 }
 
@@ -128,15 +147,14 @@ struct ContentView: View {
 
             .onChange(of: game.state) { newState in
                 guard game.matchState == .inProgress else { return }
+
                 if newState.isGameOver {
-                    showGameOverAlert = true
+                    activeAlert = .gameOver
                 }
             }
-
             .onChange(of: game.matchState) { newValue in
                 if case .finished = newValue {
-                    showGameOverAlert = false
-                    showMatchOverAlert = true
+                    activeAlert = .matchOver
                 }
             }
         }
