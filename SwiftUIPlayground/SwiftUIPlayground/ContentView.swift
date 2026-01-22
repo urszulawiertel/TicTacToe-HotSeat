@@ -1,18 +1,11 @@
-//
-//  ContentView.swift
-//  SwiftUIPlayground
-//
-//  Created by Ula on 13/01/2026.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var game = TicTacToeEngine()
+    private let defaultTimeLimit = 10
+
+    @StateObject private var game: TicTacToeEngine
     @State private var selectedTimeLimit: Int
     @State private var activeAlert: ActiveAlert?
-
-    private let defaultTimeLimit = 10
 
     init() {
         let limit = defaultTimeLimit
@@ -47,7 +40,7 @@ struct ContentView: View {
                 Text(game.state.statusText)
                     .font(.headline)
 
-                Text("Best of \(game.targetScore)")
+                Text("First to \(game.targetScore)")
                     .font(.caption)
 
                 HStack(spacing: 24) {
