@@ -43,7 +43,6 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 16) {
-
                 Text(game.state.statusText)
                     .font(.headline)
 
@@ -80,14 +79,20 @@ struct ContentView: View {
                 .onChange(of: selectedTimeLimit) { newValue in
                     game.setMoveTimeLimit(newValue)
                 }
+                .onChange(of: game.moveTimeLimit) { newValue in
+                    selectedTimeLimit = newValue
+                }
 
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
-                        CellView(symbol: game.board[index]?.rawValue, isHighlighted: game.isHighlightedCell(index))
-                            .opacity(game.state.isGameOver ? 0.6 : 1.0)
-                            .onTapGesture {
-                                game.makeMove(at: index)
-                            }
+                        CellView(
+                            symbol: game.board[index]?.rawValue,
+                            isHighlighted: game.isHighlightedCell(index)
+                        )
+                        .opacity(game.state.isGameOver ? 0.6 : 1.0)
+                        .onTapGesture {
+                            game.makeMove(at: index)
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -98,56 +103,52 @@ struct ContentView: View {
                     }
                     .buttonStyle(.borderedProminent)
 
-                    Button("Reset Score") {
-                        game.resetScore()
+                    Button("New Match") {
+                        game.newMatch()
                     }
                     .buttonStyle(.bordered)
-                }
-
-                .onReceive(timer) { _ in
-                    game.tick()
-                }
-
-                .alert(item: $activeAlert) { alert in
-                    switch alert {
-                    case .gameOver:
-                        return Alert(
-                            title: Text("Game Over"),
-                            message: Text(game.state.statusText),
-                            primaryButton: .default(Text("Play Again")) {
-                                game.resetBoard()
-                            },
-                            secondaryButton: .destructive(Text("Reset Score")) {
-                                game.resetScore()
-                            }
-                        )
-
-                    case .matchOver:
-                        let winnerText: String = {
-                            if case .finished(let winner) = game.matchState {
-                                return "\(winner.rawValue) wins the match!"
-                            }
-                            return "Match finished"
-                        }()
-
-                        return Alert(
-                            title: Text("Match Over"),
-                            message: Text(winnerText),
-                            dismissButton: .default(Text("New Match")) {
-                                game.newMatch()
-                            }
-                        )
-                    }
                 }
 
                 Spacer()
             }
             .padding(.top, 24)
             .navigationTitle("Tic-Tac-Toe")
+            .onReceive(timer) { _ in
+                game.tick()
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .gameOver:
+                    return Alert(
+                        title: Text("Game Over"),
+                        message: Text(game.state.statusText),
+                        primaryButton: .default(Text("Play Again")) {
+                            game.resetBoard()
+                        },
+                        secondaryButton: .destructive(Text("New Match")) {
+                            game.newMatch()
+                        }
+                    )
 
+                case .matchOver:
+                    let winnerText: String = {
+                        if case .finished(let winner) = game.matchState {
+                            return "\(winner.rawValue) wins the match!"
+                        }
+                        return "Match finished"
+                    }()
+
+                    return Alert(
+                        title: Text("Match Over"),
+                        message: Text(winnerText),
+                        dismissButton: .default(Text("New Match")) {
+                            game.newMatch()
+                        }
+                    )
+                }
+            }
             .onChange(of: game.state) { newState in
                 guard game.matchState == .inProgress else { return }
-
                 if newState.isGameOver {
                     activeAlert = .gameOver
                 }
