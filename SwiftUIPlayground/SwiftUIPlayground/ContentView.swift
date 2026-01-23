@@ -13,6 +13,7 @@ struct ContentView: View {
     @StateObject private var game: TicTacToeEngine
     @State private var selectedTimeLimit: Int
     @State private var activeAlert: ActiveAlert?
+    @State private var isAIMode: Bool = false
 
     init() {
         let limit = defaultTimeLimit
@@ -68,6 +69,16 @@ struct ContentView: View {
                     selectedTimeLimit = newValue
                 }
 
+                Picker("Opponent", selection: $isAIMode) {
+                    Text("2 Players").tag(false)
+                    Text("VS AI").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .onChange(of: isAIMode) { newValue in
+                    game.setOpponent(newValue ? .aiRandom : .human)
+                }
+
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(
@@ -77,6 +88,7 @@ struct ContentView: View {
                         .opacity(game.state.isGameOver ? 0.6 : 1.0)
                         .onTapGesture {
                             game.makeMove(at: index)
+                            game.makeAIMoveIfNeeded()
                         }
                     }
                 }
@@ -100,6 +112,7 @@ struct ContentView: View {
             .navigationTitle("Tic-Tac-Toe")
             .onReceive(timer) { _ in
                 game.tick()
+                game.makeAIMoveIfNeeded()
             }
             .alert(item: $activeAlert) { alert in
                 switch alert {

@@ -51,12 +51,19 @@ final class TicTacToeEngine: ObservableObject {
         case finished(winner: Player)
     }
 
+    enum Opponent: Equatable {
+        case human
+        case aiRandom
+    }
+
     // MARK: - Public state (UI reads this)
 
     @Published private(set) var board: [Player?] = Array(repeating: nil, count: 9)
     @Published private(set) var state: GameState = .playing(current: .x)
 
     @Published private(set) var matchState: MatchState = .inProgress
+
+    @Published private(set) var opponent: Opponent = .human
 
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
@@ -143,6 +150,21 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
+    func makeAIMoveIfNeeded() {
+        guard opponent == .aiRandom else { return }
+        guard matchState == .inProgress else { return }
+        guard timerEnabled else { return }
+        guard case .playing(let current) = state else { return }
+
+        // AI plays as o
+        guard current == .o else { return }
+
+        let emptyIndexes = board.indices.filter { board[$0] == nil }
+        guard let randomIndex = emptyIndexes.randomElement() else { return }
+
+        makeMove(at: randomIndex)
+    }
+
     func newMatch() {
         xScore = 0
         oScore = 0
@@ -173,6 +195,11 @@ final class TicTacToeEngine: ObservableObject {
     func setTargetScore(_ value: Int) {
         targetScore = value
         resetScore()
+    }
+
+    func setOpponent(_ newValue: Opponent) {
+        opponent = newValue
+        newMatch()
     }
 
     // MARK: - UI helpers

@@ -146,4 +146,28 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 5) // should be ignored
         XCTAssertNil(game.board[5])
     }
+
+    func testAIMakesMoveForO() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setOpponent(.aiRandom)
+
+        game.makeMove(at: 0) // X
+        game.makeAIMoveIfNeeded()
+
+        // should be one move O on the board
+        let oCount = game.board.filter { $0 == .o }.count
+        XCTAssertEqual(oCount, 1)
+    }
+
+    func testAIDoesNotMoveOnXTurn() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setOpponent(.aiRandom)
+
+        // start = X turn
+        game.makeAIMoveIfNeeded()
+
+        let oCount = game.board.filter { $0 == .o }.count
+        XCTAssertEqual(oCount, 0)
+    }
+
 }
