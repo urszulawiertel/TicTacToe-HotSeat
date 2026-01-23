@@ -6,10 +6,12 @@ A simple Tic-Tac-Toe (3x3) iOS app built with SwiftUI.
 - 3x3 board with X / O turns
 - Win & draw detection
 - Highlight winning line
+- First-to-N match mode (e.g. first to 3)
+- Game over + match over alerts (Play Again / New Match)
 - Score tracking (X / O)
-- Reset board / reset score
-- Hot-seat timer (10s per move)
-- Game engine extracted from UI (`TicTacToeEngine`)
+- Move timer (hot-seat) with time selection (5s / 10s / 15s) + pause/resume
+- VS AI mode (random opponent)
+- Game engine separated from UI (`TicTacToeEngine`)
 - Unit tests for core game logic (`XCTest`)
 
 ## Tech stack
