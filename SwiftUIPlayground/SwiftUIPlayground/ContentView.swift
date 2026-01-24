@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var selectedTimeLimit: Int
     @State private var activeAlert: ActiveAlert?
     @State private var isAIMode: Bool = false
+    @State private var selectedDifficulty: Int = 0
 
     init() {
         let limit = defaultTimeLimit
@@ -76,7 +77,19 @@ struct ContentView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .onChange(of: isAIMode) { newValue in
-                    game.setOpponent(newValue ? .aiRandom : .human)
+                    game.setOpponent(newValue ? .ai : .human)
+                }
+
+                if isAIMode {
+                    Picker("Difficulty", selection: $selectedDifficulty) {
+                        Text("Random").tag(0)
+                        Text("Smart").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+                    .onChange(of: selectedDifficulty) { newValue in
+                        game.setAIDifficulty(newValue == 0 ? .random : .smartBlockWin)
+                    }
                 }
 
                 LazyVGrid(columns: columns, spacing: 12) {
@@ -93,6 +106,12 @@ struct ContentView: View {
                     }
                 }
                 .padding(.horizontal)
+                .onChange(of: isAIMode) { newValue in
+                    game.setOpponent(newValue ? .ai : .human)
+                    if newValue == false {
+                        selectedDifficulty = 0
+                    }
+                }
 
                 HStack(spacing: 12) {
                     Button("Reset") {

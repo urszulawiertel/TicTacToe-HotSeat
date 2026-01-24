@@ -53,7 +53,12 @@ final class TicTacToeEngine: ObservableObject {
 
     enum Opponent: Equatable {
         case human
-        case aiRandom
+        case ai
+    }
+
+    enum AIDifficulty: Equatable {
+        case random
+        case smartBlockWin
     }
 
     // MARK: - Public state (UI reads this)
@@ -64,6 +69,7 @@ final class TicTacToeEngine: ObservableObject {
     @Published private(set) var matchState: MatchState = .inProgress
 
     @Published private(set) var opponent: Opponent = .human
+    @Published private(set) var aiDifficulty: AIDifficulty = .random
 
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
@@ -151,7 +157,7 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     func makeAIMoveIfNeeded() {
-        guard opponent == .aiRandom else { return }
+        guard opponent == .ai else { return }
         guard matchState == .inProgress else { return }
         guard timerEnabled else { return }
         guard case .playing(let current) = state else { return }
@@ -159,10 +165,24 @@ final class TicTacToeEngine: ObservableObject {
         // AI plays as o
         guard current == .o else { return }
 
-        let emptyIndexes = board.indices.filter { board[$0] == nil }
-        guard let randomIndex = emptyIndexes.randomElement() else { return }
+        let chosenIndex: Int?
 
-        makeMove(at: randomIndex)
+        switch aiDifficulty {
+        case .random:
+            chosenIndex = randomEmptyIndex()
+
+        case .smartBlockWin:
+            if let win = winningMoveIndex(for: .o) {
+                chosenIndex = win
+            } else if let block = winningMoveIndex(for: .x) {
+                chosenIndex = block
+            } else {
+                chosenIndex = randomEmptyIndex()
+            }
+        }
+
+        guard let index = chosenIndex else { return }
+        makeMove(at: index)
     }
 
     func newMatch() {
@@ -202,6 +222,11 @@ final class TicTacToeEngine: ObservableObject {
         newMatch()
     }
 
+    func setAIDifficulty(_ newValue: AIDifficulty) {
+        aiDifficulty = newValue
+        newMatch()
+    }
+
     // MARK: - UI helpers
 
     func isHighlightedCell(_ index: Int) -> Bool {
@@ -235,5 +260,27 @@ final class TicTacToeEngine: ObservableObject {
     private func incrementScore(for player: Player) {
         if player == .x { xScore += 1 }
         else { oScore += 1 }
+    }
+
+    private func winningMoveIndex(for player: Player) -> Int? {
+        for line in Self.winningLines {
+            let values = line.map { board[$0] }
+
+            let playerCount = values.filter { $0 == player }.count
+            let emptyCount = values.filter { $0 == nil }.count
+
+            if playerCount == 2 && emptyCount == 1 {
+                // find empty field in winning line
+                for idx in line where board[idx] == nil {
+                    return idx
+                }
+            }
+        }
+        return nil
+    }
+
+    private func randomEmptyIndex() -> Int? {
+        let empty = board.indices.filter { board[$0] == nil }
+        return empty.randomElement()
     }
 }

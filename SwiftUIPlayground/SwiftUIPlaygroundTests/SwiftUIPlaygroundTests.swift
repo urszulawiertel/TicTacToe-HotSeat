@@ -149,7 +149,7 @@ final class TicTacToeGameTests: XCTestCase {
 
     func testAIMakesMoveForO() {
         let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.aiRandom)
+        game.setOpponent(.ai)
 
         game.makeMove(at: 0) // X
         game.makeAIMoveIfNeeded()
@@ -161,7 +161,7 @@ final class TicTacToeGameTests: XCTestCase {
 
     func testAIDoesNotMoveOnXTurn() {
         let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.aiRandom)
+        game.setOpponent(.ai)
 
         // start = X turn
         game.makeAIMoveIfNeeded()
@@ -170,4 +170,34 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(oCount, 0)
     }
 
+    func testSmartAIBlocksXWinningMove() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setOpponent(.ai)
+        game.setAIDifficulty(.smartBlockWin)
+
+        game.makeMove(at: 0) // X
+        game.makeMove(at: 3) // O (AI set manually)
+        game.makeMove(at: 1) // X
+
+        game.makeAIMoveIfNeeded() // O (AI turn)
+
+        XCTAssertEqual(game.board[2], .o) // Index 2 should be blocked by AI
+    }
+
+    func testSmartAIPlaysWinningMoveWhenAvailable() {
+        let game = TicTacToeEngine(moveTimeLimit: 10)
+        game.setOpponent(.ai)
+        game.setAIDifficulty(.smartBlockWin)
+
+        game.makeMove(at: 0) // X
+        game.makeMove(at: 3) // O
+        game.makeMove(at: 1) // X
+        game.makeMove(at: 4) // O
+        game.makeMove(at: 8) // X
+
+        // O may win at index 5 (lines 3-4-5)
+        game.makeAIMoveIfNeeded()
+
+        XCTAssertEqual(game.board[5], .o)
+    }
 }
