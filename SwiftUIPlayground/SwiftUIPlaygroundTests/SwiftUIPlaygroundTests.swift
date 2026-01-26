@@ -10,28 +10,43 @@ import XCTest
 
 final class TicTacToeGameTests: XCTestCase {
 
+    // MARK: - Helpers
+
+    private func makeGame(_ mutate: (inout GameConfig) -> Void = { _ in }) -> TicTacToeEngine {
+        var c = GameConfig.default
+        mutate(&c)
+
+        return TicTacToeEngine(config: c)
+    }
+
+    private func advanceRunLoop(_ seconds: TimeInterval = 0.01) {
+        RunLoop.current.run(until: Date().addingTimeInterval(seconds))
+    }
+
+    // MARK: - Tests
+
     func testFirstMoveIsX() {
-        let game = TicTacToeEngine()
+        let game = makeGame()
         game.makeMove(at: 0)
         XCTAssertEqual(game.board[0], .x)
     }
 
     func testSecondMoveIsO() {
-        let game = TicTacToeEngine()
+        let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 1)
         XCTAssertEqual(game.board[1], .o)
     }
 
     func testCannotOverwriteCell() {
-        let game = TicTacToeEngine()
+        let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 0)
         XCTAssertEqual(game.board[0], .x)
     }
 
     func testWinTopRow() {
-        let game = TicTacToeEngine()
+        let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 3)
         game.makeMove(at: 1)
@@ -47,18 +62,19 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testScoreIncrementsOnWin() {
-        let game = TicTacToeEngine()
+        let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 3)
         game.makeMove(at: 1)
         game.makeMove(at: 4)
         game.makeMove(at: 2)
+
         XCTAssertEqual(game.xScore, 1)
         XCTAssertEqual(game.oScore, 0)
     }
 
     func testTimerDecrementsWhilePlaying() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
+        let game = makeGame { $0.moveTimeLimit = 10 }
         XCTAssertEqual(game.secondsLeft, 10)
 
         game.tick()
@@ -66,7 +82,7 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testTimerSwitchesPlayerOnTimeout() {
-        let game = TicTacToeEngine(moveTimeLimit: 2)
+        let game = makeGame { $0.moveTimeLimit = 2 }
 
         game.tick() // 1
         XCTAssertEqual(game.secondsLeft, 1)
@@ -82,7 +98,7 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testSuccessfulMoveResetsTimer() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
+        let game = makeGame { $0.moveTimeLimit = 10 }
 
         game.tick() // 9
         game.tick() // 8
@@ -93,7 +109,7 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testTimerDoesNotRunAfterWin() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
+        let game = makeGame { $0.moveTimeLimit = 10 }
 
         game.makeMove(at: 0)
         game.makeMove(at: 3)
@@ -107,24 +123,29 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testChangingMoveTimeLimitResetsTimer() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
+        let game = makeGame { $0.moveTimeLimit = 10 }
         game.tick()
         XCTAssertEqual(game.secondsLeft, 9)
 
-        game.setMoveTimeLimit(5)
+        var c = GameConfig.default
+        c.moveTimeLimit = 5
+        game.updateConfig(c)
+
         XCTAssertEqual(game.moveTimeLimit, 5)
         XCTAssertEqual(game.secondsLeft, 5)
     }
 
     func testMatchFinishesWhenXReachesTargetScore() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setTargetScore(1)
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.targetScore = 1
+        }
 
         game.makeMove(at: 0)
         game.makeMove(at: 3)
         game.makeMove(at: 1)
         game.makeMove(at: 4)
-        game.makeMove(at: 2) // X wins round -> match should finish
+        game.makeMove(at: 2)
 
         if case .finished(let winner) = game.matchState {
             XCTAssertEqual(winner, .x)
@@ -134,8 +155,10 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testCannotMoveAfterMatchFinished() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setTargetScore(1)
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.targetScore = 1
+        }
 
         game.makeMove(at: 0)
         game.makeMove(at: 3)
@@ -148,46 +171,57 @@ final class TicTacToeGameTests: XCTestCase {
     }
 
     func testAIMakesMoveForO() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.ai)
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0
+        }
 
         game.makeMove(at: 0) // X
-        game.makeAIMoveIfNeeded()
+        advanceRunLoop()
 
-        // should be one move O on the board
         let oCount = game.board.filter { $0 == .o }.count
         XCTAssertEqual(oCount, 1)
     }
 
-    func testAIDoesNotMoveOnXTurn() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.ai)
 
-        // start = X turn
+    func testAIDoesNotMoveOnXTurn() {
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0
+        }
+
+        // Start = X turn
         game.makeAIMoveIfNeeded()
+        advanceRunLoop()
 
         let oCount = game.board.filter { $0 == .o }.count
         XCTAssertEqual(oCount, 0)
     }
 
     func testSmartAIBlocksXWinningMove() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.ai)
-        game.setAIDifficulty(.smartBlockWin)
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.opponent = .ai
+            $0.aiDifficulty = .smartBlockWin
+            $0.aiMoveDelay = 0
+        }
 
-        game.makeMove(at: 0) // X
-        game.makeMove(at: 3) // O (AI set manually)
-        game.makeMove(at: 1) // X
+        game.makeMove(at: 0)  // X
+        advanceRunLoop()      // O auto
+        game.makeMove(at: 1)  // X
+        advanceRunLoop()      // O should block
 
-        game.makeAIMoveIfNeeded() // O (AI turn)
-
-        XCTAssertEqual(game.board[2], .o) // Index 2 should be blocked by AI
+        XCTAssertEqual(game.board[2], .o)
     }
 
     func testSmartAIPlaysWinningMoveWhenAvailable() {
-        let game = TicTacToeEngine(moveTimeLimit: 10)
-        game.setOpponent(.ai)
-        game.setAIDifficulty(.smartBlockWin)
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.opponent = .ai
+            $0.aiDifficulty = .smartBlockWin
+            $0.aiMoveDelay = 0
+        }
 
         game.makeMove(at: 0) // X
         game.makeMove(at: 3) // O
@@ -195,8 +229,8 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4) // O
         game.makeMove(at: 8) // X
 
-        // O may win at index 5 (lines 3-4-5)
         game.makeAIMoveIfNeeded()
+        advanceRunLoop()
 
         XCTAssertEqual(game.board[5], .o)
     }

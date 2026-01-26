@@ -8,19 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
-    private let defaultTimeLimit = 10
-
-    @StateObject private var game: TicTacToeEngine
-    @State private var selectedTimeLimit: Int
+    @StateObject private var game = TicTacToeEngine(config: .default)
+    @State private var uiConfig: GameConfig = .default
     @State private var activeAlert: ActiveAlert?
-    @State private var isAIMode: Bool = false
-    @State private var selectedDifficulty: Int = 0
-
-    init() {
-        let limit = defaultTimeLimit
-        _selectedTimeLimit = State(initialValue: limit)
-        _game = StateObject(wrappedValue: TicTacToeEngine(moveTimeLimit: limit))
-    }
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -33,13 +23,7 @@ struct ContentView: View {
     private enum ActiveAlert: Identifiable {
         case gameOver
         case matchOver
-
-        var id: String {
-            switch self {
-            case .gameOver: return "gameOver"
-            case .matchOver: return "matchOver"
-            }
-        }
+        var id: String { self == .gameOver ? "gameOver" : "matchOver" }
     }
 
     var body: some View {
@@ -48,7 +32,7 @@ struct ContentView: View {
 
                 HeaderView(
                     statusText: game.state.statusText,
-                    targetScore: game.targetScore,
+                    targetScore: game.config.targetScore,
                     xScore: game.xScore,
                     oScore: game.oScore,
                     secondsLeft: game.secondsLeft,
@@ -56,40 +40,28 @@ struct ContentView: View {
                     onToggleTimer: { game.toggleTimer() }
                 )
 
-                Picker("Move time", selection: $selectedTimeLimit) {
+                Picker("Move time", selection: $uiConfig.moveTimeLimit) {
                     Text("5s").tag(5)
                     Text("10s").tag(10)
                     Text("15s").tag(15)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .onChange(of: selectedTimeLimit) { newValue in
-                    game.setMoveTimeLimit(newValue)
-                }
-                .onChange(of: game.moveTimeLimit) { newValue in
-                    selectedTimeLimit = newValue
-                }
 
-                Picker("Opponent", selection: $isAIMode) {
-                    Text("2 Players").tag(false)
-                    Text("VS AI").tag(true)
+                Picker("Opponent", selection: $uiConfig.opponent) {
+                    Text("2 Players").tag(TicTacToeEngine.Opponent.human)
+                    Text("VS AI").tag(TicTacToeEngine.Opponent.ai)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .onChange(of: isAIMode) { newValue in
-                    game.setOpponent(newValue ? .ai : .human)
-                }
 
-                if isAIMode {
-                    Picker("Difficulty", selection: $selectedDifficulty) {
-                        Text("Random").tag(0)
-                        Text("Smart").tag(1)
+                if uiConfig.opponent == .ai {
+                    Picker("Difficulty", selection: $uiConfig.aiDifficulty) {
+                        Text("Random").tag(TicTacToeEngine.AIDifficulty.random)
+                        Text("Smart").tag(TicTacToeEngine.AIDifficulty.smartBlockWin)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
-                    .onChange(of: selectedDifficulty) { newValue in
-                        game.setAIDifficulty(newValue == 0 ? .random : .smartBlockWin)
-                    }
                 }
 
                 LazyVGrid(columns: columns, spacing: 12) {
@@ -99,52 +71,44 @@ struct ContentView: View {
                             isHighlighted: game.isHighlightedCell(index)
                         )
                         .opacity(game.state.isGameOver ? 0.6 : 1.0)
-                        .onTapGesture {
-                            game.makeMove(at: index)
-                        }
+                        .onTapGesture { game.makeMove(at: index) }
                     }
                 }
                 .padding(.horizontal)
-                .onChange(of: isAIMode) { newValue in
-                    game.setOpponent(newValue ? .ai : .human)
-                    if newValue == false {
-                        selectedDifficulty = 0
-                    }
-                }
 
                 HStack(spacing: 12) {
-                    Button("Reset") {
-                        game.resetBoard()
-                    }
-                    .buttonStyle(.borderedProminent)
+                    Button("Reset") { game.resetBoard() }
+                        .buttonStyle(.borderedProminent)
 
-                    Button("New Match") {
-                        game.newMatch()
-                    }
-                    .buttonStyle(.bordered)
+                    Button("New Match") { game.newMatch() }
+                        .buttonStyle(.bordered)
                 }
 
                 Spacer()
             }
             .padding(.top, 24)
             .navigationTitle("Tic-Tac-Toe")
-            .onReceive(timer) { _ in
-                game.tick()
+            .onReceive(timer) { _ in game.tick() }
+
+            // sync: UI -> engine
+            .onChange(of: uiConfig) { newValue in
+                game.updateConfig(newValue)
             }
+
+            // sync: engine -> UI
+            .onChange(of: game.config) { newValue in
+                uiConfig = newValue
+            }
+
             .alert(item: $activeAlert) { alert in
                 switch alert {
                 case .gameOver:
                     return Alert(
                         title: Text("Game Over"),
                         message: Text(game.state.statusText),
-                        primaryButton: .default(Text("Play Again")) {
-                            game.resetBoard()
-                        },
-                        secondaryButton: .destructive(Text("New Match")) {
-                            game.newMatch()
-                        }
+                        primaryButton: .default(Text("Play Again")) { game.resetBoard() },
+                        secondaryButton: .destructive(Text("New Match")) { game.newMatch() }
                     )
-
                 case .matchOver:
                     let winnerText: String = {
                         if case .finished(let winner) = game.matchState {
@@ -152,26 +116,19 @@ struct ContentView: View {
                         }
                         return "Match finished"
                     }()
-
                     return Alert(
                         title: Text("Match Over"),
                         message: Text(winnerText),
-                        dismissButton: .default(Text("New Match")) {
-                            game.newMatch()
-                        }
+                        dismissButton: .default(Text("New Match")) { game.newMatch() }
                     )
                 }
             }
             .onChange(of: game.state) { newState in
                 guard game.matchState == .inProgress else { return }
-                if newState.isGameOver {
-                    activeAlert = .gameOver
-                }
+                if newState.isGameOver { activeAlert = .gameOver }
             }
             .onChange(of: game.matchState) { newValue in
-                if case .finished = newValue {
-                    activeAlert = .matchOver
-                }
+                if case .finished = newValue { activeAlert = .matchOver }
             }
         }
     }
@@ -189,11 +146,8 @@ private struct HeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(statusText)
-                    .font(.headline)
-
+                Text(statusText).font(.headline)
                 Spacer()
-
                 Text("First to \(targetScore)")
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -15,9 +15,7 @@ final class TicTacToeEngine: ObservableObject {
         case x = "X"
         case o = "O"
 
-        mutating func toggle() {
-            self = (self == .x) ? .o : .x
-        }
+        mutating func toggle() { self = (self == .x) ? .o : .x }
     }
 
     enum GameState: Equatable {
@@ -27,21 +25,16 @@ final class TicTacToeEngine: ObservableObject {
 
         var statusText: String {
             switch self {
-            case .playing(let current):
-                return "Current: \(current.rawValue)"
-            case .win(let winner, _):
-                return "\(winner.rawValue) wins!"
-            case .draw:
-                return "Draw!"
+            case .playing(let current): return "Current: \(current.rawValue)"
+            case .win(let winner, _):   return "\(winner.rawValue) wins!"
+            case .draw:                return "Draw!"
             }
         }
 
         var isGameOver: Bool {
             switch self {
-            case .playing:
-                return false
-            case .win, .draw:
-                return true
+            case .playing: return false
+            case .win, .draw: return true
             }
         }
     }
@@ -51,97 +44,68 @@ final class TicTacToeEngine: ObservableObject {
         case finished(winner: Player)
     }
 
-    enum Opponent: Equatable {
-        case human
-        case ai
-    }
-
-    enum AIDifficulty: Equatable {
-        case random
-        case smartBlockWin
-    }
+    enum Opponent: Equatable { case human, ai }
+    enum AIDifficulty: Equatable { case random, smartBlockWin }
 
     // MARK: - Public state (UI reads this)
 
+    @Published private(set) var config: GameConfig
     @Published private(set) var board: [Player?] = Array(repeating: nil, count: 9)
     @Published private(set) var state: GameState = .playing(current: .x)
-
     @Published private(set) var matchState: MatchState = .inProgress
-
-    @Published private(set) var opponent: Opponent = .human
-    @Published private(set) var aiDifficulty: AIDifficulty = .random
 
     @Published private(set) var timerEnabled: Bool = true
     @Published private(set) var secondsLeft: Int
-    @Published private(set) var moveTimeLimit: Int
 
     @Published private(set) var xScore: Int = 0
     @Published private(set) var oScore: Int = 0
-    @Published private(set) var targetScore: Int = 3
 
-    // MARK: - Constants
+    // MARK: - Private
+
     private var pendingAIMove: DispatchWorkItem?
-    private let aiMoveDelay: TimeInterval = 0.6
 
     private static let winningLines: [[Int]] = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
     ]
 
     // MARK: - Init
 
-    init(moveTimeLimit: Int = 10) {
-        self.moveTimeLimit = moveTimeLimit
-        self.secondsLeft = moveTimeLimit
+    init(config: GameConfig = .default) {
+        self.config = config
+        self.secondsLeft = config.moveTimeLimit
     }
 
     // MARK: - Game actions
 
     func makeMove(at index: Int) {
-        cancelPendingAIMove()
-        // Match must be active
         guard matchState == .inProgress else { return }
-
-        // Index must be valid
         guard (0..<board.count).contains(index) else { return }
-
-        // Game must be playable
         guard case .playing(let currentPlayer) = state else { return }
-
-        // Cell must be empty
         guard board[index] == nil else { return }
+
+        cancelPendingAIMove()
 
         board[index] = currentPlayer
 
-        // Win?
         if let line = winningLine(for: currentPlayer) {
             incrementScore(for: currentPlayer)
             state = .win(currentPlayer, line: line)
             checkForMatchWinner()
-            cancelPendingAIMove()
             return
         }
 
-        // Draw?
         if board.allSatisfy({ $0 != nil }) {
             state = .draw
-            cancelPendingAIMove()
             return
         }
 
-        // Next turn
         var next = currentPlayer
         next.toggle()
         state = .playing(current: next)
+        secondsLeft = config.moveTimeLimit
 
-        // Successful move resets timer
-        secondsLeft = moveTimeLimit
         scheduleAIMoveIfNeeded()
     }
 
@@ -150,48 +114,22 @@ final class TicTacToeEngine: ObservableObject {
         guard timerEnabled else { return }
         guard case .playing(let currentPlayer) = state else { return }
 
-        if secondsLeft > 0 {
-            secondsLeft -= 1
-        }
+        if secondsLeft > 0 { secondsLeft -= 1 }
 
         if secondsLeft == 0 {
+            cancelPendingAIMove()
+
             var next = currentPlayer
             next.toggle()
             state = .playing(current: next)
-            secondsLeft = moveTimeLimit
+            secondsLeft = config.moveTimeLimit
+
             scheduleAIMoveIfNeeded()
         }
     }
 
-    // MARK: - AI scheduling
-
-    private func cancelPendingAIMove() {
-        pendingAIMove?.cancel()
-        pendingAIMove = nil
-    }
-
-    private func shouldAIMoveNow() -> Bool {
-        guard opponent == .ai else { return false }
-        guard matchState == .inProgress else { return false }
-        guard timerEnabled else { return false }
-        guard case .playing(let current) = state else { return false }
-        return current == .o
-    }
-
-    private func scheduleAIMoveIfNeeded() {
-        cancelPendingAIMove()
-        guard shouldAIMoveNow() else { return }
-
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            // Re-check after delay
-            guard self.shouldAIMoveNow() else { return }
-            guard let index = self.aiMoveIndex() else { return }
-            self.makeMove(at: index)
-        }
-
-        pendingAIMove = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + aiMoveDelay, execute: work)
+    func makeAIMoveIfNeeded() {
+        scheduleAIMoveIfNeeded()
     }
 
     func newMatch() {
@@ -207,40 +145,30 @@ final class TicTacToeEngine: ObservableObject {
         timerEnabled = true
         board = Array(repeating: nil, count: 9)
         state = .playing(current: .x)
-        secondsLeft = moveTimeLimit
+        secondsLeft = config.moveTimeLimit
     }
 
-    func resetScore() {
-        newMatch()
-    }
+    func toggleTimer() { timerEnabled.toggle() }
 
-    func toggleTimer() {
+    // MARK: - Config (single entry point)
+
+    func updateConfig(_ newConfig: GameConfig) {
+        let old = config
+        guard newConfig != old else { return }
+
         cancelPendingAIMove()
-        timerEnabled.toggle()
-    }
+        config = newConfig
 
-    func setMoveTimeLimit(_ newValue: Int) {
-        cancelPendingAIMove()
-        moveTimeLimit = newValue
-        resetBoard()
-    }
+        let requiresNewMatch =
+            newConfig.opponent != old.opponent ||
+            newConfig.aiDifficulty != old.aiDifficulty ||
+            newConfig.targetScore != old.targetScore
 
-    func setTargetScore(_ value: Int) {
-        cancelPendingAIMove()
-        targetScore = value
-        resetScore()
-    }
-
-    func setOpponent(_ newValue: Opponent) {
-        cancelPendingAIMove()
-        opponent = newValue
-        newMatch()
-    }
-
-    func setAIDifficulty(_ newValue: AIDifficulty) {
-        cancelPendingAIMove()
-        aiDifficulty = newValue
-        newMatch()
+        if requiresNewMatch {
+            newMatch()
+        } else {
+            resetBoard()
+        }
     }
 
     // MARK: - UI helpers
@@ -250,46 +178,66 @@ final class TicTacToeEngine: ObservableObject {
         return line.contains(index)
     }
 
+    var moveTimeLimit: Int { config.moveTimeLimit }
+    var targetScore: Int { config.targetScore }
+    var opponent: Opponent { config.opponent }
+    var aiDifficulty: AIDifficulty { config.aiDifficulty }
+    var aiMoveDelay: TimeInterval { config.aiMoveDelay }
+
+
     // MARK: - Private helpers
 
+    private func scheduleAIMoveIfNeeded() {
+        guard pendingAIMove == nil else { return }
+        guard timerEnabled else { return }
+        guard config.opponent == .ai else { return }
+        guard matchState == .inProgress else { return }
+        guard case .playing(let current) = state else { return }
+        guard current == .o else { return }
+
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingAIMove = nil
+            guard let index = self.aiMoveIndex() else { return }
+            self.makeMove(at: index)
+        }
+
+        pendingAIMove = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + config.aiMoveDelay, execute: work)
+    }
+
+    private func cancelPendingAIMove() {
+        pendingAIMove?.cancel()
+        pendingAIMove = nil
+    }
+
     private func checkForMatchWinner() {
-        if xScore >= targetScore {
+        if xScore >= config.targetScore {
             matchState = .finished(winner: .x)
-        } else if oScore >= targetScore {
+        } else if oScore >= config.targetScore {
             matchState = .finished(winner: .o)
         }
     }
 
     private func winningLine(for player: Player) -> [Int]? {
         for line in Self.winningLines {
-            let a = board[line[0]]
-            let b = board[line[1]]
-            let c = board[line[2]]
-
-            if a == player && b == player && c == player {
-                return line
-            }
+            let a = board[line[0]], b = board[line[1]], c = board[line[2]]
+            if a == player && b == player && c == player { return line }
         }
         return nil
     }
 
     private func incrementScore(for player: Player) {
-        if player == .x { xScore += 1 }
-        else { oScore += 1 }
+        if player == .x { xScore += 1 } else { oScore += 1 }
     }
 
     private func winningMoveIndex(for player: Player) -> Int? {
         for line in Self.winningLines {
             let values = line.map { board[$0] }
-
             let playerCount = values.filter { $0 == player }.count
             let emptyCount = values.filter { $0 == nil }.count
-
             if playerCount == 2 && emptyCount == 1 {
-                // find empty field in winning line
-                for idx in line where board[idx] == nil {
-                    return idx
-                }
+                return line.first(where: { board[$0] == nil })
             }
         }
         return nil
@@ -301,7 +249,7 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     private func aiMoveIndex() -> Int? {
-        switch aiDifficulty {
+        switch config.aiDifficulty {
         case .random:
             return randomEmptyIndex()
         case .smartBlockWin:
