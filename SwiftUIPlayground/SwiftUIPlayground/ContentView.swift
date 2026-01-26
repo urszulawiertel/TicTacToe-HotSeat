@@ -101,7 +101,6 @@ struct ContentView: View {
                         .opacity(game.state.isGameOver ? 0.6 : 1.0)
                         .onTapGesture {
                             game.makeMove(at: index)
-                            game.makeAIMoveIfNeeded()
                         }
                     }
                 }
@@ -131,7 +130,6 @@ struct ContentView: View {
             .navigationTitle("Tic-Tac-Toe")
             .onReceive(timer) { _ in
                 game.tick()
-                game.makeAIMoveIfNeeded()
             }
             .alert(item: $activeAlert) { alert in
                 switch alert {

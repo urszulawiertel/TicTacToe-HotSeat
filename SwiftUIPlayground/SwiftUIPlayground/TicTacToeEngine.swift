@@ -80,6 +80,8 @@ final class TicTacToeEngine: ObservableObject {
     @Published private(set) var targetScore: Int = 3
 
     // MARK: - Constants
+    private var pendingAIMove: DispatchWorkItem?
+    private let aiMoveDelay: TimeInterval = 0.6
 
     private static let winningLines: [[Int]] = [
         [0, 1, 2],
@@ -102,6 +104,7 @@ final class TicTacToeEngine: ObservableObject {
     // MARK: - Game actions
 
     func makeMove(at index: Int) {
+        cancelPendingAIMove()
         // Match must be active
         guard matchState == .inProgress else { return }
 
@@ -121,12 +124,14 @@ final class TicTacToeEngine: ObservableObject {
             incrementScore(for: currentPlayer)
             state = .win(currentPlayer, line: line)
             checkForMatchWinner()
+            cancelPendingAIMove()
             return
         }
 
         // Draw?
         if board.allSatisfy({ $0 != nil }) {
             state = .draw
+            cancelPendingAIMove()
             return
         }
 
@@ -137,6 +142,7 @@ final class TicTacToeEngine: ObservableObject {
 
         // Successful move resets timer
         secondsLeft = moveTimeLimit
+        scheduleAIMoveIfNeeded()
     }
 
     func tick() {
@@ -153,21 +159,43 @@ final class TicTacToeEngine: ObservableObject {
             next.toggle()
             state = .playing(current: next)
             secondsLeft = moveTimeLimit
+            scheduleAIMoveIfNeeded()
         }
     }
 
-    func makeAIMoveIfNeeded() {
-        guard opponent == .ai else { return }
-        guard matchState == .inProgress else { return }
-        guard timerEnabled else { return }
-        guard case .playing(let current) = state else { return }
-        guard current == .o else { return }
+    // MARK: - AI scheduling
 
-        guard let index = aiMoveIndex() else { return }
-        makeMove(at: index)
+    private func cancelPendingAIMove() {
+        pendingAIMove?.cancel()
+        pendingAIMove = nil
+    }
+
+    private func shouldAIMoveNow() -> Bool {
+        guard opponent == .ai else { return false }
+        guard matchState == .inProgress else { return false }
+        guard timerEnabled else { return false }
+        guard case .playing(let current) = state else { return false }
+        return current == .o
+    }
+
+    private func scheduleAIMoveIfNeeded() {
+        cancelPendingAIMove()
+        guard shouldAIMoveNow() else { return }
+
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            // Re-check after delay
+            guard self.shouldAIMoveNow() else { return }
+            guard let index = self.aiMoveIndex() else { return }
+            self.makeMove(at: index)
+        }
+
+        pendingAIMove = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + aiMoveDelay, execute: work)
     }
 
     func newMatch() {
+        cancelPendingAIMove()
         xScore = 0
         oScore = 0
         matchState = .inProgress
@@ -175,6 +203,7 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     func resetBoard() {
+        cancelPendingAIMove()
         timerEnabled = true
         board = Array(repeating: nil, count: 9)
         state = .playing(current: .x)
@@ -186,25 +215,30 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     func toggleTimer() {
+        cancelPendingAIMove()
         timerEnabled.toggle()
     }
 
     func setMoveTimeLimit(_ newValue: Int) {
+        cancelPendingAIMove()
         moveTimeLimit = newValue
         resetBoard()
     }
 
     func setTargetScore(_ value: Int) {
+        cancelPendingAIMove()
         targetScore = value
         resetScore()
     }
 
     func setOpponent(_ newValue: Opponent) {
+        cancelPendingAIMove()
         opponent = newValue
         newMatch()
     }
 
     func setAIDifficulty(_ newValue: AIDifficulty) {
+        cancelPendingAIMove()
         aiDifficulty = newValue
         newMatch()
     }
