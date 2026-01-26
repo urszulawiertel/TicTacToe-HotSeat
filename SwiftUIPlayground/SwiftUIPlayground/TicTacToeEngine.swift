@@ -161,27 +161,9 @@ final class TicTacToeEngine: ObservableObject {
         guard matchState == .inProgress else { return }
         guard timerEnabled else { return }
         guard case .playing(let current) = state else { return }
-
-        // AI plays as o
         guard current == .o else { return }
 
-        let chosenIndex: Int?
-
-        switch aiDifficulty {
-        case .random:
-            chosenIndex = randomEmptyIndex()
-
-        case .smartBlockWin:
-            if let win = winningMoveIndex(for: .o) {
-                chosenIndex = win
-            } else if let block = winningMoveIndex(for: .x) {
-                chosenIndex = block
-            } else {
-                chosenIndex = randomEmptyIndex()
-            }
-        }
-
-        guard let index = chosenIndex else { return }
+        guard let index = aiMoveIndex() else { return }
         makeMove(at: index)
     }
 
@@ -282,5 +264,16 @@ final class TicTacToeEngine: ObservableObject {
     private func randomEmptyIndex() -> Int? {
         let empty = board.indices.filter { board[$0] == nil }
         return empty.randomElement()
+    }
+
+    private func aiMoveIndex() -> Int? {
+        switch aiDifficulty {
+        case .random:
+            return randomEmptyIndex()
+        case .smartBlockWin:
+            if let win = winningMoveIndex(for: .o) { return win }
+            if let block = winningMoveIndex(for: .x) { return block }
+            return randomEmptyIndex()
+        }
     }
 }
