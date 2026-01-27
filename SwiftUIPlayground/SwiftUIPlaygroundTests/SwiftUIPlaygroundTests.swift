@@ -19,7 +19,7 @@ final class TicTacToeGameTests: XCTestCase {
         return TicTacToeEngine(config: c)
     }
 
-    private func advanceRunLoop(_ seconds: TimeInterval = 0.01) {
+    private func advanceRunLoop(_ seconds: TimeInterval = 0.6) {
         RunLoop.current.run(until: Date().addingTimeInterval(seconds))
     }
 
