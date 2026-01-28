@@ -23,7 +23,7 @@ final class TicTacToeGameTests: XCTestCase {
         RunLoop.current.run(until: Date().addingTimeInterval(seconds))
     }
 
-    // MARK: - Tests
+    // MARK: - Core gameplay
 
     func testFirstMoveIsX() {
         let game = makeGame()
@@ -72,6 +72,43 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(game.xScore, 1)
         XCTAssertEqual(game.oScore, 0)
     }
+
+    func testMatchFinishesWhenXReachesTargetScore() {
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.targetScore = 1
+        }
+
+        game.makeMove(at: 0)
+        game.makeMove(at: 3)
+        game.makeMove(at: 1)
+        game.makeMove(at: 4)
+        game.makeMove(at: 2)
+
+        if case .finished(let winner) = game.matchState {
+            XCTAssertEqual(winner, .x)
+        } else {
+            XCTFail("Expected match finished")
+        }
+    }
+
+    func testCannotMoveAfterMatchFinished() {
+        let game = makeGame {
+            $0.moveTimeLimit = 10
+            $0.targetScore = 1
+        }
+
+        game.makeMove(at: 0)
+        game.makeMove(at: 3)
+        game.makeMove(at: 1)
+        game.makeMove(at: 4)
+        game.makeMove(at: 2)
+
+        game.makeMove(at: 5) // should be ignored
+        XCTAssertNil(game.board[5])
+    }
+
+    // MARK: - Timer
 
     func testTimerDecrementsWhilePlaying() {
         let game = makeGame { $0.moveTimeLimit = 10 }
@@ -135,40 +172,7 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(game.secondsLeft, 5)
     }
 
-    func testMatchFinishesWhenXReachesTargetScore() {
-        let game = makeGame {
-            $0.moveTimeLimit = 10
-            $0.targetScore = 1
-        }
-
-        game.makeMove(at: 0)
-        game.makeMove(at: 3)
-        game.makeMove(at: 1)
-        game.makeMove(at: 4)
-        game.makeMove(at: 2)
-
-        if case .finished(let winner) = game.matchState {
-            XCTAssertEqual(winner, .x)
-        } else {
-            XCTFail("Expected match finished")
-        }
-    }
-
-    func testCannotMoveAfterMatchFinished() {
-        let game = makeGame {
-            $0.moveTimeLimit = 10
-            $0.targetScore = 1
-        }
-
-        game.makeMove(at: 0)
-        game.makeMove(at: 3)
-        game.makeMove(at: 1)
-        game.makeMove(at: 4)
-        game.makeMove(at: 2)
-
-        game.makeMove(at: 5) // should be ignored
-        XCTAssertNil(game.board[5])
-    }
+    // MARK: - AI (basic)
 
     func testAIMakesMoveForO() {
         let game = makeGame {
@@ -184,7 +188,6 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(oCount, 1)
     }
 
-
     func testAIDoesNotMoveOnXTurn() {
         let game = makeGame {
             $0.opponent = .ai
@@ -198,6 +201,55 @@ final class TicTacToeGameTests: XCTestCase {
         let oCount = game.board.filter { $0 == .o }.count
         XCTAssertEqual(oCount, 0)
     }
+
+    // MARK: - AI (delayed scheduling / cancellation)
+
+    func testResetBoardCancelsPendingAIMove() {
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0.2
+
+        }
+
+        game.makeMove(at: 0) // X -> schedule AI
+        game.resetBoard() // cancel
+
+        advanceRunLoop(0.25)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+    }
+
+    func testMakingAnotherMoveCancelsPendingAIMove() {
+        // Testing that changing the config/mode doesn't leave tasks hanging.
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0.2
+        }
+
+        game.makeMove(at: 0) // X schedules AI
+
+        var c = game.config // before AI plays change game mode
+        c.opponent = .human
+        game.updateConfig(c)
+
+        advanceRunLoop(0.25)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+    }
+
+    func testTimeoutTriggersAIMoveWhenTurnBecomesO() {
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.moveTimeLimit = 1
+            $0.aiMoveDelay = 0.1
+        }
+
+        game.tick()
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+
+        advanceRunLoop(0.2)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 1)
+    }
+
+    // MARK: - AI (smartBlockWin)
 
     func testSmartAIBlocksXWinningMove() {
         let game = makeGame {
