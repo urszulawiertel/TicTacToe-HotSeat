@@ -37,7 +37,9 @@ struct ContentView: View {
                     oScore: game.oScore,
                     secondsLeft: game.secondsLeft,
                     timerEnabled: game.timerEnabled,
-                    onToggleTimer: { game.toggleTimer() }
+                    canUndo: game.canUndo,
+                    onToggleTimer: { game.toggleTimer() },
+                    onUndo: { game.undoLastMove() }
                 )
 
                 Picker("Move time", selection: $uiConfig.moveTimeLimit) {
@@ -141,7 +143,9 @@ private struct HeaderView: View {
     let oScore: Int
     let secondsLeft: Int
     let timerEnabled: Bool
+    let canUndo: Bool
     let onToggleTimer: () -> Void
+    let onUndo: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -172,6 +176,13 @@ private struct HeaderView: View {
                             .frame(width: 18, height: 18)
                     }
                     .buttonStyle(.bordered)
+
+                    Button(action: onUndo) {
+                        Image(systemName: "arrow.uturn.backward")
+                            .frame(width: 18, height: 18)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!canUndo)
                 }
             }
         }
