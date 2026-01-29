@@ -286,4 +286,96 @@ final class TicTacToeGameTests: XCTestCase {
 
         XCTAssertEqual(game.board[5], .o)
     }
+
+    // MARK: - Undo (AI-aware)
+
+    func testUndoInHumanModeRevertsLastMove() {
+        let game = makeGame {
+            $0.opponent = .human
+            $0.moveTimeLimit = 10
+        }
+
+        game.makeMove(at: 0)
+        XCTAssertEqual(game.board[0], .x)
+
+        XCTAssertTrue(game.canUndo)
+        game.undoLastMove()
+
+        XCTAssertNil(game.board[0])
+
+        if case .playing(let current) = game.state {
+            XCTAssertEqual(current, .x)
+        } else {
+            XCTFail("Expected playing state")
+        }
+    }
+
+    func testUndoInAIModeRevertsPlayerAndAI() {
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0
+            $0.moveTimeLimit = 10
+        }
+
+        game.makeMove(at: 0)
+        advanceRunLoop()
+
+        XCTAssertEqual(game.board.filter { $0 == .x }.count, 1)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 1)
+
+        XCTAssertTrue(game.canUndo)
+        game.undoLastMove()
+
+        XCTAssertEqual(game.board.filter { $0 == .x }.count, 0)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+
+        if case .playing(let current) = game.state {
+            XCTAssertEqual(current, .x)
+        } else {
+            XCTFail("Expected playing state")
+        }
+    }
+
+    func testUndoResetsTimer() {
+        let game = makeGame {
+            $0.opponent = .human
+            $0.moveTimeLimit = 10
+        }
+
+        game.tick()
+        game.tick()
+        XCTAssertEqual(game.secondsLeft, 8)
+
+        game.makeMove(at: 0) // X
+        XCTAssertEqual(game.secondsLeft, 10)
+
+        game.tick()
+        XCTAssertEqual(game.secondsLeft, 9)
+
+        game.undoLastMove()
+        XCTAssertEqual(game.secondsLeft, 10)
+    }
+
+    func testCannotUndoAfterWin() {
+        let game = makeGame {
+            $0.opponent = .human
+            $0.moveTimeLimit = 10
+        }
+
+        // X wins top row
+        game.makeMove(at: 0) // X
+        game.makeMove(at: 3) // O
+        game.makeMove(at: 1) // X
+        game.makeMove(at: 4) // O
+        game.makeMove(at: 2) // X wins
+
+        XCTAssertFalse(game.canUndo)
+        game.undoLastMove()
+
+        if case .win(let winner, _) = game.state {
+            XCTAssertEqual(winner, .x)
+        } else {
+            XCTFail("Expected win state")
+        }
+    }
 }
