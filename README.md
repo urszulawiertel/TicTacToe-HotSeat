@@ -38,18 +38,18 @@ Tic-Tac-Toe iOS app built with SwiftUI, featuring match mode, AI opponent, move 
 - Clean match state transitions
 - Single source of truth configuration (GameConfig)
 
-## Tech stack
+## 🛠 Tech stack
 - Swift
 - SwiftUI
 - ObservableObject (`@StateObject`, `@Published`)
 - XCTest
 
-## How to run
+## ▶️ How to run
 1. Open the project in Xcode
 2. Select an iOS Simulator
 3. Run (`Cmd + R`)
 
-## Tests
+## 🧪 Tests
 Unit tests cover:
 - Move validation
 - Win detection
