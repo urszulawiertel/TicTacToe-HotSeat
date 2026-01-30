@@ -1,13 +1,13 @@
 //
-//  SwiftUIPlaygroundUITestsLaunchTests.swift
-//  SwiftUIPlaygroundUITests
+//  TicTacToeHotSeatUITestsLaunchTests.swift
+//  TicTacToeHotSeatUITests
 //
 //  Created by Ula on 13/01/2026.
 //
 
 import XCTest
 
-final class SwiftUIPlaygroundUITestsLaunchTests: XCTestCase {
+final class TicTacToeHotSeatUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

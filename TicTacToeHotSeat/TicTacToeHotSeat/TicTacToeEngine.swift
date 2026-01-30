@@ -1,6 +1,6 @@
 //
 //  TicTacToeEngine.swift
-//  SwiftUIPlayground
+//  TicTacToeHotSeat
 //
 //  Created by Ula on 19/01/2026.
 //

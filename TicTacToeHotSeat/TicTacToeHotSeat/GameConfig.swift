@@ -1,6 +1,6 @@
 //
 //  GameConfig.swift
-//  SwiftUIPlayground
+//  TicTacToeHotSeat
 //
 //  Created by Ula on 26/01/2026.
 //

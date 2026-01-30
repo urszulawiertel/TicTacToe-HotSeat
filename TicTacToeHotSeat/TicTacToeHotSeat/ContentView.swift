@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  SwiftUIPlayground
+//  TicTacToeHotSeat
 //
 //  Created by Ula on 13/01/2026.
 //

@@ -1,13 +1,13 @@
 //
-//  SwiftUIPlaygroundUITests.swift
-//  SwiftUIPlaygroundUITests
+//  TicTacToeHotSeatUITests.swift
+//  TicTacToeHotSeatUITests
 //
 //  Created by Ula on 13/01/2026.
 //
 
 import XCTest
 
-final class SwiftUIPlaygroundUITests: XCTestCase {
+final class TicTacToeHotSeatUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

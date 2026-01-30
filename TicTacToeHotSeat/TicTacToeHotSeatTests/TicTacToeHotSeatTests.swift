@@ -1,12 +1,12 @@
 //
-//  SwiftUIPlaygroundTests.swift
-//  SwiftUIPlaygroundTests
+//  TicTacToeHotSeatTests.swift
+//  TicTacToeHotSeatTests
 //
 //  Created by Ula on 13/01/2026.
 //
 
 import XCTest
-@testable import SwiftUIPlayground
+@testable import TicTacToeHotSeat
 
 final class TicTacToeGameTests: XCTestCase {
 
