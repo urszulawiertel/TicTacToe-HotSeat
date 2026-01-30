@@ -2,9 +2,9 @@
 
 Tic-Tac-Toe iOS app built with SwiftUI, featuring match mode, AI opponent, move timer, undo system and deterministic async testing.
 
-## Features
+## 🚀 Features
 
-### Core Gameplay
+### 🎮 Core Gameplay
 - 3×3 board
 - Win & draw detection
 - Winning line highlight
@@ -61,4 +61,3 @@ Unit tests cover:
 - Undo (human + AI mode)
 Run unit tests:
 - `Cmd + U`
-
