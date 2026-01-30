@@ -26,6 +26,17 @@ struct ContentView: View {
         var id: String { self == .gameOver ? "gameOver" : "matchOver" }
     }
 
+    private var currentGhostSymbol: String? {
+        guard game.matchState == .inProgress else { return nil }
+        guard case .playing(let current) = game.state else { return nil }
+
+        if game.config.opponent == .ai {
+            return current == .x ? current.rawValue : nil
+        } else {
+            return current.rawValue
+        }
+    }
+
     var body: some View {
         NavigationView {
             VStack(spacing: 14) {
@@ -70,10 +81,11 @@ struct ContentView: View {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(
                             symbol: game.board[index]?.rawValue,
-                            isHighlighted: game.isHighlightedCell(index)
+                            isHighlighted: game.isHighlightedCell(index),
+                            ghostSymbol: currentGhostSymbol,
+                            onTap: { game.makeMove(at: index) }
                         )
                         .opacity(game.state.isGameOver ? 0.6 : 1.0)
-                        .onTapGesture { game.makeMove(at: index) }
                     }
                 }
                 .padding(.horizontal)
@@ -196,6 +208,16 @@ private struct HeaderView: View {
 struct CellView: View {
     let symbol: String?
     let isHighlighted: Bool
+    let ghostSymbol: String?
+    let onTap: () -> Void
+
+    @State private var showGhost = false
+    @State private var ghostWorkItem: DispatchWorkItem?
+
+    private let previewDelay: TimeInterval = 0.2
+    private var canPreview: Bool {
+        symbol == nil && ghostSymbol != nil
+    }
 
     var body: some View {
         ZStack {
@@ -203,9 +225,43 @@ struct CellView: View {
                 .stroke(lineWidth: isHighlighted ? 6 : 2)
                 .frame(height: 90)
 
+            // Real move
             Text(symbol ?? "")
                 .font(.system(size: 42, weight: .bold, design: .rounded))
+
+            // Ghost preview
+            if showGhost, let ghostSymbol, symbol == nil {
+                Text(ghostSymbol)
+                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .opacity(0.25)
+            }
         }
         .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    guard canPreview else { return }
+                    // schedule ghost only once per touch
+                    guard ghostWorkItem == nil else { return }
+
+                    let work = DispatchWorkItem {
+                        withAnimation(.easeInOut(duration: 0.12)) { showGhost = true }
+                    }
+                    ghostWorkItem = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + previewDelay, execute: work)
+                }
+                .onEnded { _ in
+                    ghostWorkItem?.cancel()
+                    ghostWorkItem = nil
+                    
+                    if showGhost {
+                        // long press ended => hide ghost, NO move
+                        withAnimation(.easeInOut(duration: 0.12)) { showGhost = false }
+                    } else {
+                        // quick press => treat as tap
+                        onTap()
+                    }
+                }
+        )
     }
 }
