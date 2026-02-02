@@ -39,11 +39,6 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
-    struct Move: Equatable {
-        let index: Int
-        let player: Player
-    }
-
     enum MatchState: Equatable {
         case inProgress
         case finished(winner: Player)
@@ -93,7 +88,7 @@ final class TicTacToeEngine: ObservableObject {
         cancelPendingAIMove()
 
         board[index] = currentPlayer
-        moveHistory.append(Move(index: index, player: currentPlayer))
+        history.record(index: index, player: currentPlayer)
 
         if let line = winningLine(for: currentPlayer) {
             incrementScore(for: currentPlayer)
@@ -152,37 +147,33 @@ final class TicTacToeEngine: ObservableObject {
         board = Array(repeating: nil, count: 9)
         state = .playing(current: .x)
         secondsLeft = config.moveTimeLimit
-        moveHistory.removeAll()
+        history.reset()
     }
 
     var canUndo: Bool {
-        guard matchState == .inProgress else { return false }
-        guard case .playing = state else { return false }
-        let required = (config.opponent == .ai) ? 2 : 1
-        return moveHistory.count >= required
+        matchState == .inProgress &&
+        !state.isGameOver &&
+        !history.isEmpty
     }
 
     func undoLastMove() {
         guard canUndo else { return }
+
         cancelPendingAIMove()
 
-        let countToUndo = (config.opponent == .ai) ? 2 : 1
-        for _ in 0..<countToUndo {
-            guard let last = moveHistory.popLast() else { break }
-            board[last.index] = nil
+        switch config.opponent {
+        case .human:
+            undoOne()
+
+        // If AI has already played: undo the O and X.
+        // If AI didn't make it: just undo X.
+        case .ai:
+            if history.last?.player == .o {
+                _ = undoOne()
+            }
+            _ = undoOne()
         }
 
-        let nextPlayer: Player = {
-            if let lastRemaining = moveHistory.last {
-                var player = lastRemaining.player
-                player.toggle()
-                return player
-            } else {
-                return .x
-            }
-        }()
-
-        state = .playing(current: nextPlayer)
         secondsLeft = config.moveTimeLimit
     }
 
@@ -226,7 +217,18 @@ final class TicTacToeEngine: ObservableObject {
 
     // MARK: - Private helpers
 
-    private var moveHistory: [Move] = []
+    private var history = MoveHistory<Player>()
+
+    @discardableResult
+    private func undoOne() -> MoveHistory<Player>.Move? {
+        guard let move = history.popLast() else { return nil }
+
+        board[move.index] = nil
+        state = .playing(current: move.player) // ten sam gracz gra ponownie
+
+        return move
+    }
+
 
     private var aiStrategy: AIStrategy {
         switch config.aiDifficulty {

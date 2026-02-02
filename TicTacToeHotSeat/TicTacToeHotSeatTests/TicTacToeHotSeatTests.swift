@@ -292,7 +292,6 @@ final class TicTacToeGameTests: XCTestCase {
     func testUndoInHumanModeRevertsLastMove() {
         let game = makeGame {
             $0.opponent = .human
-            $0.moveTimeLimit = 10
         }
 
         game.makeMove(at: 0)
@@ -314,7 +313,6 @@ final class TicTacToeGameTests: XCTestCase {
         let game = makeGame {
             $0.opponent = .ai
             $0.aiMoveDelay = 0
-            $0.moveTimeLimit = 10
         }
 
         game.makeMove(at: 0)
@@ -377,5 +375,19 @@ final class TicTacToeGameTests: XCTestCase {
         } else {
             XCTFail("Expected win state")
         }
+    }
+
+    func testUndoCancelsPendingAIMove() {
+        let game = makeGame {
+            $0.opponent = .ai
+            $0.aiMoveDelay = 0.2
+        }
+
+        game.makeMove(at: 0) // X schedules AI
+        game.undoLastMove()  // should cancel pending too
+
+        advanceRunLoop(0.25)
+        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.board.filter { $0 == .x }.count, 0)
     }
 }

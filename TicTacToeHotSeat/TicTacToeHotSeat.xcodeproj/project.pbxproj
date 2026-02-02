@@ -16,6 +16,7 @@
 		75DA80442F1E860200FB31FC /* TicTacToeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DA80432F1E860200FB31FC /* TicTacToeEngine.swift */; };
 		75DAAAF82F27BA6400DDF2B1 /* GameConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DAAAF72F27BA6400DDF2B1 /* GameConfig.swift */; };
 		75FAAD5E2F310121005C1948 /* AIStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FAAD5D2F310121005C1948 /* AIStrategy.swift */; };
+		75FAAD602F310FF1005C1948 /* MoveHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FAAD5F2F310FF1005C1948 /* MoveHistory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		75DA80432F1E860200FB31FC /* TicTacToeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeEngine.swift; sourceTree = "<group>"; };
 		75DAAAF72F27BA6400DDF2B1 /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
 		75FAAD5D2F310121005C1948 /* AIStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIStrategy.swift; sourceTree = "<group>"; };
+		75FAAD5F2F310FF1005C1948 /* MoveHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveHistory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,10 +101,11 @@
 			isa = PBXGroup;
 			children = (
 				75FAAD5D2F310121005C1948 /* AIStrategy.swift */,
-				754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */,
-				75DA80432F1E860200FB31FC /* TicTacToeEngine.swift */,
 				754602362F16B37F00FE1399 /* ContentView.swift */,
 				75DAAAF72F27BA6400DDF2B1 /* GameConfig.swift */,
+				75FAAD5F2F310FF1005C1948 /* MoveHistory.swift */,
+				754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */,
+				75DA80432F1E860200FB31FC /* TicTacToeEngine.swift */,
 				754602382F16B38100FE1399 /* Assets.xcassets */,
 			);
 			path = TicTacToeHotSeat;
@@ -257,6 +260,7 @@
 				75FAAD5E2F310121005C1948 /* AIStrategy.swift in Sources */,
 				754602372F16B37F00FE1399 /* ContentView.swift in Sources */,
 				75DA80442F1E860200FB31FC /* TicTacToeEngine.swift in Sources */,
+				75FAAD602F310FF1005C1948 /* MoveHistory.swift in Sources */,
 				754602352F16B37F00FE1399 /* TicTacToeHotSeatApp.swift in Sources */,
 				75DAAAF82F27BA6400DDF2B1 /* GameConfig.swift in Sources */,
 			);
