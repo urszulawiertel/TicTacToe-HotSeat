@@ -228,6 +228,15 @@ final class TicTacToeEngine: ObservableObject {
 
     private var moveHistory: [Move] = []
 
+    private var aiStrategy: AIStrategy {
+        switch config.aiDifficulty {
+        case .random:
+            return RandomAIStrategy()
+        case .smartBlockWin:
+            return SmartBlockWinStrategy()
+        }
+    }
+
     private func scheduleAIMoveIfNeeded() {
         guard pendingAIMove == nil else { return }
         guard timerEnabled else { return }
@@ -239,7 +248,7 @@ final class TicTacToeEngine: ObservableObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.pendingAIMove = nil
-            guard let index = self.aiMoveIndex() else { return }
+            guard let index = self.aiStrategy.chooseMove(board: self.board) else { return }
             self.makeMove(at: index)
         }
 
@@ -270,33 +279,5 @@ final class TicTacToeEngine: ObservableObject {
 
     private func incrementScore(for player: Player) {
         if player == .x { xScore += 1 } else { oScore += 1 }
-    }
-
-    private func winningMoveIndex(for player: Player) -> Int? {
-        for line in Self.winningLines {
-            let values = line.map { board[$0] }
-            let playerCount = values.filter { $0 == player }.count
-            let emptyCount = values.filter { $0 == nil }.count
-            if playerCount == 2 && emptyCount == 1 {
-                return line.first(where: { board[$0] == nil })
-            }
-        }
-        return nil
-    }
-
-    private func randomEmptyIndex() -> Int? {
-        let empty = board.indices.filter { board[$0] == nil }
-        return empty.randomElement()
-    }
-
-    private func aiMoveIndex() -> Int? {
-        switch config.aiDifficulty {
-        case .random:
-            return randomEmptyIndex()
-        case .smartBlockWin:
-            if let win = winningMoveIndex(for: .o) { return win }
-            if let block = winningMoveIndex(for: .x) { return block }
-            return randomEmptyIndex()
-        }
     }
 }
