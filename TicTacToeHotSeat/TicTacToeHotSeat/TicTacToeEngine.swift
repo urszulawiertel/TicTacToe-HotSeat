@@ -123,11 +123,8 @@ final class TicTacToeEngine: ObservableObject {
         guard timerEnabled else { return }
         guard case .playing(let currentPlayer) = state else { return }
 
-        let before = clock.secondsLeft
         clock.tick()
         secondsLeft = clock.secondsLeft
-
-        guard secondsLeft != before else { return }
 
         if secondsLeft == 0 {
             cancelPendingAIMove()
