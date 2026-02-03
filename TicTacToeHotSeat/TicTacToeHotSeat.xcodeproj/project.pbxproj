@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7540DF162F325A490043AB08 /* GameClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF152F325A490043AB08 /* GameClock.swift */; };
+		7540DF182F325A710043AB08 /* CountdownClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF172F325A710043AB08 /* CountdownClock.swift */; };
 		754602352F16B37F00FE1399 /* TicTacToeHotSeatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */; };
 		754602372F16B37F00FE1399 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754602362F16B37F00FE1399 /* ContentView.swift */; };
 		754602392F16B38100FE1399 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 754602382F16B38100FE1399 /* Assets.xcassets */; };
@@ -37,6 +39,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7540DF152F325A490043AB08 /* GameClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameClock.swift; sourceTree = "<group>"; };
+		7540DF172F325A710043AB08 /* CountdownClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownClock.swift; sourceTree = "<group>"; };
 		754602312F16B37F00FE1399 /* TicTacToeHotSeat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TicTacToeHotSeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeHotSeatApp.swift; sourceTree = "<group>"; };
 		754602362F16B37F00FE1399 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -102,6 +106,8 @@
 			children = (
 				75FAAD5D2F310121005C1948 /* AIStrategy.swift */,
 				754602362F16B37F00FE1399 /* ContentView.swift */,
+				7540DF172F325A710043AB08 /* CountdownClock.swift */,
+				7540DF152F325A490043AB08 /* GameClock.swift */,
 				75DAAAF72F27BA6400DDF2B1 /* GameConfig.swift */,
 				75FAAD5F2F310FF1005C1948 /* MoveHistory.swift */,
 				754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */,
@@ -261,6 +267,8 @@
 				754602372F16B37F00FE1399 /* ContentView.swift in Sources */,
 				75DA80442F1E860200FB31FC /* TicTacToeEngine.swift in Sources */,
 				75FAAD602F310FF1005C1948 /* MoveHistory.swift in Sources */,
+				7540DF182F325A710043AB08 /* CountdownClock.swift in Sources */,
+				7540DF162F325A490043AB08 /* GameClock.swift in Sources */,
 				754602352F16B37F00FE1399 /* TicTacToeHotSeatApp.swift in Sources */,
 				75DAAAF82F27BA6400DDF2B1 /* GameConfig.swift in Sources */,
 			);

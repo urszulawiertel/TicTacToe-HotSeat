@@ -63,6 +63,7 @@ final class TicTacToeEngine: ObservableObject {
     // MARK: - Private
 
     private var pendingAIMove: DispatchWorkItem?
+    private let clock: GameClock
 
     private static let winningLines: [[Int]] = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -72,10 +73,16 @@ final class TicTacToeEngine: ObservableObject {
 
     // MARK: - Init
 
-    init(config: GameConfig = .default) {
+    init(config: GameConfig = .default, clock: GameClock? = nil) {
         self.config = config
-        self.secondsLeft = config.moveTimeLimit
+
+        let c = clock ?? CountdownClock(secondsLeft: config.moveTimeLimit, isEnabled: true)
+        self.clock = c
+
+        self.timerEnabled = c.isEnabled
+        self.secondsLeft = c.secondsLeft
     }
+
 
     // MARK: - Game actions
 
@@ -105,7 +112,8 @@ final class TicTacToeEngine: ObservableObject {
         var next = currentPlayer
         next.toggle()
         state = .playing(current: next)
-        secondsLeft = config.moveTimeLimit
+        clock.reset(to: config.moveTimeLimit)
+        secondsLeft = clock.secondsLeft
 
         scheduleAIMoveIfNeeded()
     }
@@ -115,7 +123,11 @@ final class TicTacToeEngine: ObservableObject {
         guard timerEnabled else { return }
         guard case .playing(let currentPlayer) = state else { return }
 
-        if secondsLeft > 0 { secondsLeft -= 1 }
+        let before = clock.secondsLeft
+        clock.tick()
+        secondsLeft = clock.secondsLeft
+
+        guard secondsLeft != before else { return }
 
         if secondsLeft == 0 {
             cancelPendingAIMove()
@@ -123,7 +135,9 @@ final class TicTacToeEngine: ObservableObject {
             var next = currentPlayer
             next.toggle()
             state = .playing(current: next)
-            secondsLeft = config.moveTimeLimit
+
+            clock.reset(to: config.moveTimeLimit)
+            secondsLeft = clock.secondsLeft
 
             scheduleAIMoveIfNeeded()
         }
@@ -140,9 +154,11 @@ final class TicTacToeEngine: ObservableObject {
     func resetBoard() {
         cancelPendingAIMove()
         timerEnabled = true
+        clock.isEnabled = true
         board = Array(repeating: nil, count: 9)
         state = .playing(current: .x)
-        secondsLeft = config.moveTimeLimit
+        clock.reset(to: config.moveTimeLimit)
+        secondsLeft = clock.secondsLeft
         history.reset()
     }
 
@@ -170,11 +186,14 @@ final class TicTacToeEngine: ObservableObject {
             _ = undoOne()
         }
 
-        secondsLeft = config.moveTimeLimit
+        clock.reset(to: config.moveTimeLimit)
+        secondsLeft = clock.secondsLeft
     }
 
-
-    func toggleTimer() { timerEnabled.toggle() }
+    func toggleTimer() {
+        timerEnabled.toggle()
+        clock.isEnabled = timerEnabled
+    }
 
     // MARK: - Config (single entry point)
 

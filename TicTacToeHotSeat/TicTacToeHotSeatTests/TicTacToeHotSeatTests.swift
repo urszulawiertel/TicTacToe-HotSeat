@@ -172,6 +172,15 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(game.secondsLeft, 5)
     }
 
+    func testToggleTimerDisablesClockTicking() {
+        let game = makeGame { $0.moveTimeLimit = 10 }
+        game.toggleTimer() // disable
+
+        let before = game.secondsLeft
+        game.tick()
+        XCTAssertEqual(game.secondsLeft, before)
+    }
+
     // MARK: - AI (basic)
 
     func testAIMakesMoveForO() {
