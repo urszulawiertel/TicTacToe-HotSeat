@@ -129,10 +129,6 @@ final class TicTacToeEngine: ObservableObject {
         }
     }
 
-    func makeAIMoveIfNeeded() {
-        scheduleAIMoveIfNeeded()
-    }
-
     func newMatch() {
         cancelPendingAIMove()
         xScore = 0
@@ -207,13 +203,6 @@ final class TicTacToeEngine: ObservableObject {
         guard case .win(_, let line) = state else { return false }
         return line.contains(index)
     }
-
-    var moveTimeLimit: Int { config.moveTimeLimit }
-    var targetScore: Int { config.targetScore }
-    var opponent: Opponent { config.opponent }
-    var aiDifficulty: AIDifficulty { config.aiDifficulty }
-    var aiMoveDelay: TimeInterval { config.aiMoveDelay }
-
 
     // MARK: - Private helpers
 

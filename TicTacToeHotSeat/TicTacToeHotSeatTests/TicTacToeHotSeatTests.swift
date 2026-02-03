@@ -168,7 +168,7 @@ final class TicTacToeGameTests: XCTestCase {
         c.moveTimeLimit = 5
         game.updateConfig(c)
 
-        XCTAssertEqual(game.moveTimeLimit, 5)
+        XCTAssertEqual(game.config.moveTimeLimit, 5)
         XCTAssertEqual(game.secondsLeft, 5)
     }
 
@@ -195,7 +195,7 @@ final class TicTacToeGameTests: XCTestCase {
         }
 
         // Start = X turn
-        game.makeAIMoveIfNeeded()
+        game.tick()
         advanceRunLoop()
 
         let oCount = game.board.filter { $0 == .o }.count
@@ -281,7 +281,6 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4) // O
         game.makeMove(at: 8) // X
 
-        game.makeAIMoveIfNeeded()
         advanceRunLoop()
 
         XCTAssertEqual(game.board[5], .o)
