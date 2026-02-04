@@ -217,7 +217,6 @@ final class TicTacToeGameTests: XCTestCase {
         let game = makeGame {
             $0.opponent = .ai
             $0.aiMoveDelay = 0.2
-
         }
 
         game.makeMove(at: 0) // X -> schedule AI
@@ -293,6 +292,50 @@ final class TicTacToeGameTests: XCTestCase {
         advanceRunLoop()
 
         XCTAssertEqual(game.board[5], .o)
+    }
+
+    // MARK: - AI (minimax)
+
+    func testMinimaxReturnsNilWhenBoardAlreadyWon() {
+        let strategy = MinimaxStrategy()
+
+        let board: [TicTacToeEngine.Player?] = [
+            .x, .x, .x,
+            .o, .o, nil,
+            nil, nil, nil
+        ]
+
+        let move = strategy.chooseMove(board: board)
+
+        XCTAssertNil(move)
+    }
+
+    func testMinimaxReturnsNilOnDrawBoard() {
+        let strategy = MinimaxStrategy()
+
+        let board: [TicTacToeEngine.Player?] = [
+            .x, .o, .x,
+            .x, .o, .o,
+            .o, .x, .x
+        ]
+
+        let move = strategy.chooseMove(board: board)
+
+        XCTAssertNil(move)
+    }
+
+    func testMinimaxReturnsValidMoveOnEmptyBoard() {
+        let strategy = MinimaxStrategy()
+
+        let board: [TicTacToeEngine.Player?] = [
+            .x, .o, .x,
+            .x, .o, .o,
+            .o, .x, nil
+        ]
+
+        let move = strategy.chooseMove(board: board)
+
+        XCTAssertEqual(move, 8)
     }
 
     // MARK: - Undo (AI-aware)

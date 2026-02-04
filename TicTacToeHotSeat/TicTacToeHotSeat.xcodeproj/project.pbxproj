@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		752806DF2F3378C800C6F05C /* MinimaxStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752806DE2F3378C800C6F05C /* MinimaxStrategy.swift */; };
 		7540DF162F325A490043AB08 /* GameClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF152F325A490043AB08 /* GameClock.swift */; };
 		7540DF182F325A710043AB08 /* CountdownClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF172F325A710043AB08 /* CountdownClock.swift */; };
 		754602352F16B37F00FE1399 /* TicTacToeHotSeatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */; };
@@ -39,6 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		752806DE2F3378C800C6F05C /* MinimaxStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimaxStrategy.swift; sourceTree = "<group>"; };
 		7540DF152F325A490043AB08 /* GameClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameClock.swift; sourceTree = "<group>"; };
 		7540DF172F325A710043AB08 /* CountdownClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownClock.swift; sourceTree = "<group>"; };
 		754602312F16B37F00FE1399 /* TicTacToeHotSeat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TicTacToeHotSeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -105,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				75FAAD5D2F310121005C1948 /* AIStrategy.swift */,
+				752806DE2F3378C800C6F05C /* MinimaxStrategy.swift */,
 				754602362F16B37F00FE1399 /* ContentView.swift */,
 				7540DF172F325A710043AB08 /* CountdownClock.swift */,
 				7540DF152F325A490043AB08 /* GameClock.swift */,
@@ -263,6 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				752806DF2F3378C800C6F05C /* MinimaxStrategy.swift in Sources */,
 				75FAAD5E2F310121005C1948 /* AIStrategy.swift in Sources */,
 				754602372F16B37F00FE1399 /* ContentView.swift in Sources */,
 				75DA80442F1E860200FB31FC /* TicTacToeEngine.swift in Sources */,

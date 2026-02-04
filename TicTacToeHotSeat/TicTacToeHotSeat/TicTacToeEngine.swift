@@ -45,7 +45,7 @@ final class TicTacToeEngine: ObservableObject {
     }
 
     enum Opponent: Equatable { case human, ai }
-    enum AIDifficulty: Equatable { case random, smartBlockWin }
+    enum AIDifficulty: Equatable { case random, smartBlockWin, minimax }
 
     // MARK: - Public state (UI reads this)
 
@@ -241,6 +241,8 @@ final class TicTacToeEngine: ObservableObject {
             return RandomAIStrategy()
         case .smartBlockWin:
             return SmartBlockWinStrategy()
+        case .minimax:
+            return MinimaxStrategy()
         }
     }
 
