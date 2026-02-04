@@ -25,8 +25,25 @@ struct MinimaxStrategy: AIStrategy {
     }
 
     func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
-        if evaluateTerminal(board) != nil { return nil }
-        return emptyIndices(board).first
+        if terminalScore(for: board) != nil { return nil }
+
+        let empties = board.indices.filter { board[$0] == nil }
+        guard !empties.isEmpty else { return nil }
+
+        var bestMove: Int?
+        var bestScore = Int.min
+
+        for i in empties {
+            var b = board
+            b[i] = .o
+            let score = minimax(board: b, isMaximizing: false)
+            if score > bestScore {
+                bestScore = score
+                bestMove = i
+            }
+        }
+
+        return bestMove
     }
 }
 
@@ -55,6 +72,37 @@ private extension MinimaxStrategy {
             }
         }
         return false
+    }
+
+    private func terminalScore(for board: [TicTacToeEngine.Player?]) -> Int? {
+        if isWinner(.o, board: board) { return 10 }
+        if isWinner(.x, board: board) { return -10 }
+        if board.allSatisfy({ $0 != nil }) { return 0 }
+        return nil
+    }
+
+    private func minimax(board: [TicTacToeEngine.Player?], isMaximizing: Bool) -> Int {
+        if let score = terminalScore(for: board) { return score }
+
+        let empties = board.indices.filter { board[$0] == nil }
+
+        if isMaximizing {
+            var best = Int.min
+            for i in empties {
+                var b = board
+                b[i] = .o
+                best = max(best, minimax(board: b, isMaximizing: false))
+            }
+            return best
+        } else {
+            var best = Int.max
+            for i in empties {
+                var b = board
+                b[i] = .x
+                best = min(best, minimax(board: b, isMaximizing: true))
+            }
+            return best
+        }
     }
 }
 

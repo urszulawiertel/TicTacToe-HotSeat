@@ -338,6 +338,32 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertEqual(move, 8)
     }
 
+    func testMinimaxPlaysWinningMoveWhenAvailable() {
+        let strategy = MinimaxStrategy()
+        let board: [TicTacToeEngine.Player?] = [
+            .o, .o, nil,
+            .x, .x, nil,
+            nil, nil, nil
+        ]
+
+        let move = strategy.chooseMove(board: board)
+
+        XCTAssertEqual(move, 2)
+    }
+
+    func testMinimaxBlocksXWinningMove() {
+        let strategy = MinimaxStrategy()
+        let board: [TicTacToeEngine.Player?] = [
+            .x, .x, nil,
+            .o, nil, nil,
+            nil, nil, nil
+        ]
+    
+        let move = strategy.chooseMove(board: board)
+
+        XCTAssertEqual(move, 2)
+    }
+
     // MARK: - Undo (AI-aware)
 
     func testUndoInHumanModeRevertsLastMove() {
