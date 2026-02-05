@@ -19,7 +19,7 @@ struct MinimaxStrategy: AIStrategy {
     ]
 
     func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
-        guard terminalScore(board) == nil else { return nil }
+        guard terminalScore(board, depth: 0) == nil else { return nil }
 
         let empties = emptyIndices(board)
         guard !empties.isEmpty else { return nil }
@@ -30,7 +30,7 @@ struct MinimaxStrategy: AIStrategy {
         for i in empties {
             var b = board
             b[i] = ai
-            let score = minimax(board: b, isMaximizing: false)
+            let score = minimax(board: b, isMaximizing: false, depth: 0)
             if score > bestScore {
                 bestScore = score
                 bestMove = i
@@ -49,9 +49,9 @@ private extension MinimaxStrategy {
         board.indices.filter { board[$0] == nil }
     }
 
-    func terminalScore(_ board: [TicTacToeEngine.Player?]) -> Int? {
-        if isWinner(ai, board: board) { return 1 }
-        if isWinner(human, board: board) { return -1 }
+    func terminalScore(_ board: [TicTacToeEngine.Player?], depth: Int) -> Int? {
+        if isWinner(ai, board: board) { return 10 - depth }
+        if isWinner(human, board: board) { return depth - 10 }
         if emptyIndices(board).isEmpty { return 0 }
         return nil
     }
@@ -68,8 +68,8 @@ private extension MinimaxStrategy {
         return false
     }
 
-    func minimax(board: [TicTacToeEngine.Player?], isMaximizing: Bool) -> Int {
-        if let score = terminalScore(board) { return score }
+    func minimax(board: [TicTacToeEngine.Player?], isMaximizing: Bool, depth: Int) -> Int {
+        if let score = terminalScore(board, depth: depth) { return score }
 
         let empties = emptyIndices(board)
 
@@ -78,7 +78,7 @@ private extension MinimaxStrategy {
             for i in empties {
                 var b = board
                 b[i] = ai
-                best = max(best, minimax(board: b, isMaximizing: false))
+                best = max(best, minimax(board: b, isMaximizing: false, depth: depth + 1))
             }
             return best
         } else {
@@ -86,7 +86,7 @@ private extension MinimaxStrategy {
             for i in empties {
                 var b = board
                 b[i] = human
-                best = min(best, minimax(board: b, isMaximizing: true))
+                best = min(best, minimax(board: b, isMaximizing: true, depth: depth + 1))
             }
             return best
         }
