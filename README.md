@@ -1,36 +1,44 @@
 # TicTacToe Hot-Seat (SwiftUI)
 
-Tic-Tac-Toe iOS app built with SwiftUI, featuring match mode, AI opponent, move timer, undo system and deterministic async testing.
+A simple Tic-Tac-Toe (3x3) iOS app built with SwiftUI, featuring multiple AI difficulty levels including an unbeatable Minimax AI.
 
 ## 🚀 Features
 
 ### 🎮 Core Gameplay
-- 3×3 board
+- 3x3 board (X / O turns)
 - Win & draw detection
-- Winning line highlight
-- First-to-N match mode (configurable target score)
+- Highlight winning line
+- First-to-N match mode
 - Score tracking (X / O)
-- Game over & match over flows
+- Game over & match over alerts
 
 ### ⏱ Move Timer
-- Configurable move time (5s / 10s / 15s)
+- Hot-seat timer
+- Selectable time limit (5s / 10s / 15s)
 - Pause / resume
-- Timeout auto-switches player
-- Timer resets on valid move
-- Fully covered by unit tests
+- Timer resets on move / undo
+- Extracted `GameClock` abstraction
 
-### 🤖 AI Mode
-- VS AI mode
-- Random AI
-- Smart AI (blocks opponent win / plays winning move)
-- Delayed AI move (configurable)
-- Proper cancellation of pending AI tasks
+### 🤖 AI Modes
+- **Random** – chooses random empty cell
+- **Smart** – blocks opponent & plays winning moves
+- **Minimax (Unbeatable)** – optimal game tree search
+    - Never loses
+    - Always finds winning path if available
+AI strategies are fully separated from the engine via the `AIStrategy` abstraction.
 
 ### ↩ Undo (AI-aware)
 - Undo last move
 - In VS AI mode: reverts both player and AI move
 - Cancels scheduled AI work
 - Resets timer state correctly
+
+### 🧠 Architecture
+- `TicTacToeEngine` separated from UI
+- `GameClock` extracted
+- `MoveHistory` extracted
+- AI strategies extracted (`Random`, `SmartBlockWin`, `Minimax`)
+- Fully unit tested game logic
 
 ### ✨ UX Enhancements
 - Ghost move preview (press & hold)
