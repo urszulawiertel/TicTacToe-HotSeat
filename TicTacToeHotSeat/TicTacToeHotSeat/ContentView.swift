@@ -72,6 +72,7 @@ struct ContentView: View {
                     Picker("Difficulty", selection: $uiConfig.aiDifficulty) {
                         Text("Random").tag(TicTacToeEngine.AIDifficulty.random)
                         Text("Smart").tag(TicTacToeEngine.AIDifficulty.smartBlockWin)
+                        Text("Minimax").tag(TicTacToeEngine.AIDifficulty.minimax)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
