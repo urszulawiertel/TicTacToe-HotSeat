@@ -11,12 +11,11 @@ struct MinimaxStrategy: AIStrategy {
 
     private let ai: TicTacToeEngine.Player = .o
     private let human: TicTacToeEngine.Player = .x
+    private let rules: GameRules
 
-    private static let winningLines: [[Int]] = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ]
+    init(rules: GameRules = GameRules()) {
+        self.rules = rules
+    }
 
     func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
         guard terminalScore(board, depth: 0) == nil else { return nil }
@@ -50,22 +49,10 @@ private extension MinimaxStrategy {
     }
 
     func terminalScore(_ board: [TicTacToeEngine.Player?], depth: Int) -> Int? {
-        if isWinner(ai, board: board) { return 10 - depth }
-        if isWinner(human, board: board) { return depth - 10 }
+        if rules.isWinner(ai, board: board) { return 10 - depth }
+        if rules.isWinner(human, board: board) { return depth - 10 }
         if emptyIndices(board).isEmpty { return 0 }
         return nil
-    }
-
-    func isWinner(_ player: TicTacToeEngine.Player, board: [TicTacToeEngine.Player?]) -> Bool {
-        for line in Self.winningLines {
-            let a = board[line[0]]
-            let b = board[line[1]]
-            let c = board[line[2]]
-            if a == player && b == player && c == player {
-                return true
-            }
-        }
-        return false
     }
 
     func minimax(board: [TicTacToeEngine.Player?], isMaximizing: Bool, depth: Int) -> Int {

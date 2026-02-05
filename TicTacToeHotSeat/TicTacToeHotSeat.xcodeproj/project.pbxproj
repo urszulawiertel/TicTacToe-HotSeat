@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7511CAF32F34EDA40038BF98 /* GameRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511CAF22F34EDA40038BF98 /* GameRules.swift */; };
 		752806DF2F3378C800C6F05C /* MinimaxStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752806DE2F3378C800C6F05C /* MinimaxStrategy.swift */; };
 		7540DF162F325A490043AB08 /* GameClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF152F325A490043AB08 /* GameClock.swift */; };
 		7540DF182F325A710043AB08 /* CountdownClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7540DF172F325A710043AB08 /* CountdownClock.swift */; };
@@ -40,6 +41,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7511CAF22F34EDA40038BF98 /* GameRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRules.swift; sourceTree = "<group>"; };
 		752806DE2F3378C800C6F05C /* MinimaxStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimaxStrategy.swift; sourceTree = "<group>"; };
 		7540DF152F325A490043AB08 /* GameClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameClock.swift; sourceTree = "<group>"; };
 		7540DF172F325A710043AB08 /* CountdownClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownClock.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 				7540DF172F325A710043AB08 /* CountdownClock.swift */,
 				7540DF152F325A490043AB08 /* GameClock.swift */,
 				75DAAAF72F27BA6400DDF2B1 /* GameConfig.swift */,
+				7511CAF22F34EDA40038BF98 /* GameRules.swift */,
 				75FAAD5F2F310FF1005C1948 /* MoveHistory.swift */,
 				754602342F16B37F00FE1399 /* TicTacToeHotSeatApp.swift */,
 				75DA80432F1E860200FB31FC /* TicTacToeEngine.swift */,
@@ -275,6 +278,7 @@
 				7540DF162F325A490043AB08 /* GameClock.swift in Sources */,
 				754602352F16B37F00FE1399 /* TicTacToeHotSeatApp.swift in Sources */,
 				75DAAAF82F27BA6400DDF2B1 /* GameConfig.swift in Sources */,
+				7511CAF32F34EDA40038BF98 /* GameRules.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

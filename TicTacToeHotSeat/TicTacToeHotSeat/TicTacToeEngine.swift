@@ -64,12 +64,7 @@ final class TicTacToeEngine: ObservableObject {
 
     private var pendingAIMove: DispatchWorkItem?
     private let clock: GameClock
-
-    private static let winningLines: [[Int]] = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ]
+    private let rules = GameRules()
 
     // MARK: - Init
 
@@ -97,7 +92,7 @@ final class TicTacToeEngine: ObservableObject {
         board[index] = currentPlayer
         history.record(index: index, player: currentPlayer)
 
-        if let line = winningLine(for: currentPlayer) {
+        if let line = rules.winningLine(for: currentPlayer, board: board) {
             incrementScore(for: currentPlayer)
             state = .win(currentPlayer, line: line)
             checkForMatchWinner()
@@ -234,7 +229,6 @@ final class TicTacToeEngine: ObservableObject {
         return move
     }
 
-
     private var aiStrategy: AIStrategy {
         switch config.aiDifficulty {
         case .random:
@@ -276,14 +270,6 @@ final class TicTacToeEngine: ObservableObject {
         } else if oScore >= config.targetScore {
             matchState = .finished(winner: .o)
         }
-    }
-
-    private func winningLine(for player: Player) -> [Int]? {
-        for line in Self.winningLines {
-            let a = board[line[0]], b = board[line[1]], c = board[line[2]]
-            if a == player && b == player && c == player { return line }
-        }
-        return nil
     }
 
     private func incrementScore(for player: Player) {
