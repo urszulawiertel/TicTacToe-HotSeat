@@ -25,9 +25,9 @@ final class TicTacToeCore {
 
         var statusText: String {
             switch self {
-            case .playing(let current): return "Current: \(current.rawValue)"
-            case .win(let winner, _):   return "\(winner.rawValue) wins!"
-            case .draw:                return "Draw!"
+            case .playing(let current): return L10n.statusCurrent(current.rawValue)
+            case .win(let winner, _):   return L10n.statusWin(winner.rawValue)
+            case .draw:                return L10n.statusDraw
             }
         }
 

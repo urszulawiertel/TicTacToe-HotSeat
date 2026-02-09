@@ -1,0 +1,46 @@
+//
+//  Localizable.strings
+//  TicTacToeHotSeat
+//
+//  Created by Ula on 09/02/2026.
+//
+
+/* Navigation */
+"nav.title" = "Tic-Tac-Toe";
+
+/* Game state */
+"status.current" = "Current: %@";
+"status.win" = "%@ wins!";
+"status.draw" = "Draw!";
+
+/* Alerts */
+"alert.gameOver.title" = "Game Over";
+"alert.matchOver.title" = "Match Over";
+"alert.matchOver.message" = "%@ wins the match!";
+"alert.matchOver.fallback" = "Match finished";
+
+/* Buttons */
+"button.playAgain" = "Play Again";
+"button.newMatch" = "New Match";
+"button.reset" = "Reset";
+
+/* Header */
+"header.firstTo" = "First to %@";
+"header.secondsLeft" = "%ds";
+"header.xScore" = "X: %d";
+"header.oScore" = "O: %d";
+
+/* Picker labels */
+"picker.moveTime" = "Move time";
+"picker.opponent" = "Opponent";
+"picker.difficulty" = "Difficulty";
+
+/* Opponent */
+"opponent.human" = "2 Players";
+"opponent.ai" = "VS AI";
+
+/* Difficulty */
+"difficulty.random" = "Random";
+"difficulty.smart" = "Smart";
+"difficulty.minimax" = "Unbeatable";
+

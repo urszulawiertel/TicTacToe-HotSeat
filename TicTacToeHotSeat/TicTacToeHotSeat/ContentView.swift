@@ -29,7 +29,7 @@ struct ContentView: View {
     private enum ActiveAlert: Identifiable {
         case gameOver
         case matchOver
-        var id: String { self == .gameOver ? "gameOver" : "matchOver" }
+        var id: String { self == .gameOver ? L10n.gameOverTitle : L10n.matchOverTitle }
     }
 
     private var currentGhostSymbol: String? {
@@ -59,26 +59,26 @@ struct ContentView: View {
                     onUndo: { game.undoLastMove() }
                 )
 
-                Picker("Move time", selection: $uiConfig.moveTimeLimit) {
-                    Text("5s").tag(5)
-                    Text("10s").tag(10)
-                    Text("15s").tag(15)
+                Picker(L10n.moveTime, selection: $uiConfig.moveTimeLimit) {
+                    Text(L10n.secondsLeft(5)).tag(5)
+                    Text(L10n.secondsLeft(10)).tag(10)
+                    Text(L10n.secondsLeft(15)).tag(15)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                Picker("Opponent", selection: $uiConfig.opponent) {
-                    Text("2 Players").tag(Opponent.human)
-                    Text("VS AI").tag(Opponent.ai)
+                Picker(L10n.opponent, selection: $uiConfig.opponent) {
+                    Text(L10n.opponentHuman).tag(Opponent.human)
+                    Text(L10n.opponentAI).tag(Opponent.ai)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
                 if uiConfig.opponent == .ai {
-                    Picker("Difficulty", selection: $uiConfig.aiDifficulty) {
-                        Text("Random").tag(AIDifficulty.random)
-                        Text("Smart").tag(AIDifficulty.smartBlockWin)
-                        Text("Minimax").tag(AIDifficulty.minimax)
+                    Picker(L10n.difficulty, selection: $uiConfig.aiDifficulty) {
+                        Text(L10n.difficultyRandom).tag(AIDifficulty.random)
+                        Text(L10n.difficultySmart).tag(AIDifficulty.smartBlockWin)
+                        Text(L10n.difficultyMinimax).tag(AIDifficulty.minimax)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
@@ -98,17 +98,17 @@ struct ContentView: View {
                 .padding(.horizontal)
 
                 HStack(spacing: 12) {
-                    Button("Reset") { game.resetBoard() }
+                    Button(L10n.reset) { game.resetBoard() }
                         .buttonStyle(.borderedProminent)
 
-                    Button("New Match") { game.newMatch() }
+                    Button(L10n.newMatch) { game.newMatch() }
                         .buttonStyle(.bordered)
                 }
 
                 Spacer()
             }
             .padding(.top, 24)
-            .navigationTitle("Tic-Tac-Toe")
+            .navigationTitle(L10n.navTitle)
             .onReceive(timer) { _ in game.tick() }
 
             // sync: UI -> engine
@@ -125,22 +125,22 @@ struct ContentView: View {
                 switch alert {
                 case .gameOver:
                     return Alert(
-                        title: Text("Game Over"),
+                        title: Text(L10n.gameOverTitle),
                         message: Text(game.snapshot.state.statusText),
-                        primaryButton: .default(Text("Play Again")) { game.resetBoard() },
-                        secondaryButton: .destructive(Text("New Match")) { game.newMatch() }
+                        primaryButton: .default(Text(L10n.playAgain)) { game.resetBoard() },
+                        secondaryButton: .destructive(Text(L10n.newMatch)) { game.newMatch() }
                     )
                 case .matchOver:
                     let winnerText: String = {
                         if case .finished(let winner) = game.snapshot.matchState {
-                            return "\(winner.rawValue) wins the match!"
+                            return L10n.matchOverMessage(winner.rawValue)
                         }
-                        return "Match finished"
+                        return L10n.matchOverFallback
                     }()
                     return Alert(
-                        title: Text("Match Over"),
+                        title: Text(L10n.matchOverTitle),
                         message: Text(winnerText),
-                        dismissButton: .default(Text("New Match")) { game.newMatch() }
+                        dismissButton: .default(Text(L10n.newMatch)) { game.newMatch() }
                     )
                 }
             }
@@ -171,33 +171,33 @@ private struct HeaderView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(statusText).font(.headline)
                 Spacer()
-                Text("First to \(targetScore)")
+                Text(L10n.firstTo(targetScore))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             HStack {
                 HStack(spacing: 16) {
-                    Text("X: \(xScore)")
-                    Text("O: \(oScore)")
+                    Text(L10n.xScore(xScore))
+                    Text(L10n.oScore(oScore))
                 }
                 .font(.subheadline)
 
                 Spacer()
 
                 HStack(spacing: 10) {
-                    Text("\(secondsLeft)s")
+                    Text(L10n.secondsLeft(secondsLeft))
                         .font(.subheadline.monospacedDigit())
                         .frame(width: 40, alignment: .trailing)
 
                     Button(action: onToggleTimer) {
-                        Image(systemName: timerEnabled ? "pause.fill" : "play.fill")
+                        Image(systemName: timerEnabled ? SFSymbol.pause : SFSymbol.play)
                             .frame(width: 18, height: 18)
                     }
                     .buttonStyle(.bordered)
 
                     Button(action: onUndo) {
-                        Image(systemName: "arrow.uturn.backward")
+                        Image(systemName: SFSymbol.undo)
                             .frame(width: 18, height: 18)
                     }
                     .buttonStyle(.bordered)
