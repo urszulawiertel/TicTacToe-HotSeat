@@ -126,8 +126,11 @@ final class TicTacToeCore {
         var next = currentPlayer
         next.toggle()
         state = .playing(current: next)
-        clock.reset(to: config.moveTimeLimit)
-        secondsLeft = clock.secondsLeft
+
+        if isTimedTurn(next) {
+            clock.reset(to: config.moveTimeLimit)
+            secondsLeft = clock.secondsLeft
+        }
 
         scheduleAIMoveIfNeeded()
     }
@@ -136,6 +139,7 @@ final class TicTacToeCore {
         guard matchState == .inProgress else { return }
         guard timerEnabled else { return }
         guard case .playing(let currentPlayer) = state else { return }
+        guard isTimedTurn(currentPlayer) else { return }
 
         clock.tick()
         secondsLeft = clock.secondsLeft
@@ -147,8 +151,10 @@ final class TicTacToeCore {
             next.toggle()
             state = .playing(current: next)
 
-            clock.reset(to: config.moveTimeLimit)
-            secondsLeft = clock.secondsLeft
+            if isTimedTurn(next) {
+                clock.reset(to: config.moveTimeLimit)
+                secondsLeft = clock.secondsLeft
+            }
 
             scheduleAIMoveIfNeeded()
         }
@@ -279,6 +285,11 @@ final class TicTacToeCore {
     private func cancelPendingAIMove() {
         pendingAIMove?.cancel()
         pendingAIMove = nil
+    }
+
+    private func isTimedTurn(_ player: Player) -> Bool {
+        if config.opponent == .human { return true }
+        return player == .x
     }
 
     private func checkForMatchWinner() {

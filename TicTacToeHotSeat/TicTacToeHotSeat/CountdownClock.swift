@@ -18,7 +18,8 @@ final class CountdownClock: GameClock {
 
     func tick() {
         guard isEnabled else { return }
-        if secondsLeft > 0 { secondsLeft -= 1 }
+        guard secondsLeft > 0 else { return }
+        secondsLeft -= 1
     }
 
     func reset(to seconds: Int) {
