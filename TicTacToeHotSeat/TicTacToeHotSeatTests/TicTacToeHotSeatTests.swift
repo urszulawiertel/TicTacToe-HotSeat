@@ -12,11 +12,11 @@ final class TicTacToeGameTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeGame(_ mutate: (inout GameConfig) -> Void = { _ in }) -> TicTacToeEngine {
+    private func makeGame(_ mutate: (inout GameConfig) -> Void = { _ in }) -> TicTacToeCore {
         var c = GameConfig.default
         mutate(&c)
 
-        return TicTacToeEngine(config: c)
+        return TicTacToeCore(config: c)
     }
 
     private func advanceRunLoop(_ seconds: TimeInterval = 0.6) {
@@ -28,21 +28,21 @@ final class TicTacToeGameTests: XCTestCase {
     func testFirstMoveIsX() {
         let game = makeGame()
         game.makeMove(at: 0)
-        XCTAssertEqual(game.board[0], .x)
+        XCTAssertEqual(game.snapshot.board[0], .x)
     }
 
     func testSecondMoveIsO() {
         let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 1)
-        XCTAssertEqual(game.board[1], .o)
+        XCTAssertEqual(game.snapshot.board[1], .o)
     }
 
     func testCannotOverwriteCell() {
         let game = makeGame()
         game.makeMove(at: 0)
         game.makeMove(at: 0)
-        XCTAssertEqual(game.board[0], .x)
+        XCTAssertEqual(game.snapshot.board[0], .x)
     }
 
     func testWinTopRow() {
@@ -53,7 +53,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4)
         game.makeMove(at: 2)
 
-        if case .win(let winner, let line) = game.state {
+        if case .win(let winner, let line) = game.snapshot.state {
             XCTAssertEqual(winner, .x)
             XCTAssertEqual(line, [0, 1, 2])
         } else {
@@ -69,8 +69,8 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4)
         game.makeMove(at: 2)
 
-        XCTAssertEqual(game.xScore, 1)
-        XCTAssertEqual(game.oScore, 0)
+        XCTAssertEqual(game.snapshot.xScore, 1)
+        XCTAssertEqual(game.snapshot.oScore, 0)
     }
 
     func testMatchFinishesWhenXReachesTargetScore() {
@@ -85,7 +85,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4)
         game.makeMove(at: 2)
 
-        if case .finished(let winner) = game.matchState {
+        if case .finished(let winner) = game.snapshot.matchState {
             XCTAssertEqual(winner, .x)
         } else {
             XCTFail("Expected match finished")
@@ -105,29 +105,29 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 2)
 
         game.makeMove(at: 5) // should be ignored
-        XCTAssertNil(game.board[5])
+        XCTAssertNil(game.snapshot.board[5])
     }
 
     // MARK: - Timer
 
     func testTimerDecrementsWhilePlaying() {
         let game = makeGame { $0.moveTimeLimit = 10 }
-        XCTAssertEqual(game.secondsLeft, 10)
+        XCTAssertEqual(game.snapshot.secondsLeft, 10)
 
         game.tick()
-        XCTAssertEqual(game.secondsLeft, 9)
+        XCTAssertEqual(game.snapshot.secondsLeft, 9)
     }
 
     func testTimerSwitchesPlayerOnTimeout() {
         let game = makeGame { $0.moveTimeLimit = 2 }
 
         game.tick() // 1
-        XCTAssertEqual(game.secondsLeft, 1)
+        XCTAssertEqual(game.snapshot.secondsLeft, 1)
 
         game.tick() // 0 => switch + reset
-        XCTAssertEqual(game.secondsLeft, 2)
+        XCTAssertEqual(game.snapshot.secondsLeft, 2)
 
-        if case .playing(let current) = game.state {
+        if case .playing(let current) = game.snapshot.state {
             XCTAssertEqual(current, .o)
         } else {
             XCTFail("Expected playing state")
@@ -139,10 +139,10 @@ final class TicTacToeGameTests: XCTestCase {
 
         game.tick() // 9
         game.tick() // 8
-        XCTAssertEqual(game.secondsLeft, 8)
+        XCTAssertEqual(game.snapshot.secondsLeft, 8)
 
         game.makeMove(at: 0)
-        XCTAssertEqual(game.secondsLeft, 10)
+        XCTAssertEqual(game.snapshot.secondsLeft, 10)
     }
 
     func testTimerDoesNotRunAfterWin() {
@@ -154,31 +154,31 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 4)
         game.makeMove(at: 2) // X wins
 
-        let before = game.secondsLeft
+        let before = game.snapshot.secondsLeft
         game.tick()
-        XCTAssertEqual(game.secondsLeft, before)
+        XCTAssertEqual(game.snapshot.secondsLeft, before)
     }
 
     func testChangingMoveTimeLimitResetsTimer() {
         let game = makeGame { $0.moveTimeLimit = 10 }
         game.tick()
-        XCTAssertEqual(game.secondsLeft, 9)
+        XCTAssertEqual(game.snapshot.secondsLeft, 9)
 
         var c = GameConfig.default
         c.moveTimeLimit = 5
         game.updateConfig(c)
 
-        XCTAssertEqual(game.config.moveTimeLimit, 5)
-        XCTAssertEqual(game.secondsLeft, 5)
+        XCTAssertEqual(game.snapshot.config.moveTimeLimit, 5)
+        XCTAssertEqual(game.snapshot.secondsLeft, 5)
     }
 
     func testToggleTimerDisablesClockTicking() {
         let game = makeGame { $0.moveTimeLimit = 10 }
         game.toggleTimer() // disable
 
-        let before = game.secondsLeft
+        let before = game.snapshot.secondsLeft
         game.tick()
-        XCTAssertEqual(game.secondsLeft, before)
+        XCTAssertEqual(game.snapshot.secondsLeft, before)
     }
 
     // MARK: - AI (basic)
@@ -193,7 +193,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 0) // X
         advanceRunLoop()
 
-        let oCount = game.board.filter { $0 == .o }.count
+        let oCount = game.snapshot.board.filter { $0 == .o }.count
         XCTAssertEqual(oCount, 1)
     }
 
@@ -207,7 +207,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.tick()
         advanceRunLoop()
 
-        let oCount = game.board.filter { $0 == .o }.count
+        let oCount = game.snapshot.board.filter { $0 == .o }.count
         XCTAssertEqual(oCount, 0)
     }
 
@@ -223,7 +223,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.resetBoard() // cancel
 
         advanceRunLoop(0.25)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 0)
     }
 
     func testMakingAnotherMoveCancelsPendingAIMove() {
@@ -235,12 +235,12 @@ final class TicTacToeGameTests: XCTestCase {
 
         game.makeMove(at: 0) // X schedules AI
 
-        var c = game.config // before AI plays change game mode
+        var c = game.snapshot.config // before AI plays change game mode
         c.opponent = .human
         game.updateConfig(c)
 
         advanceRunLoop(0.25)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 0)
     }
 
     func testTimeoutTriggersAIMoveWhenTurnBecomesO() {
@@ -251,10 +251,10 @@ final class TicTacToeGameTests: XCTestCase {
         }
 
         game.tick()
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 0)
 
         advanceRunLoop(0.2)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 1)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 1)
     }
 
     // MARK: - AI (smartBlockWin)
@@ -272,7 +272,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 1)  // X
         advanceRunLoop()      // O should block
 
-        XCTAssertEqual(game.board[2], .o)
+        XCTAssertEqual(game.snapshot.board[2], .o)
     }
 
     func testSmartAIPlaysWinningMoveWhenAvailable() {
@@ -291,7 +291,7 @@ final class TicTacToeGameTests: XCTestCase {
 
         advanceRunLoop()
 
-        XCTAssertEqual(game.board[5], .o)
+        XCTAssertEqual(game.snapshot.board[5], .o)
     }
 
     // MARK: - AI (minimax)
@@ -299,7 +299,7 @@ final class TicTacToeGameTests: XCTestCase {
     func testMinimaxReturnsNilWhenBoardAlreadyWon() {
         let strategy = MinimaxStrategy()
 
-        let board: [TicTacToeEngine.Player?] = [
+        let board: [TicTacToeCore.Player?] = [
             .x, .x, .x,
             .o, .o, nil,
             nil, nil, nil
@@ -313,7 +313,7 @@ final class TicTacToeGameTests: XCTestCase {
     func testMinimaxReturnsNilOnDrawBoard() {
         let strategy = MinimaxStrategy()
 
-        let board: [TicTacToeEngine.Player?] = [
+        let board: [TicTacToeCore.Player?] = [
             .x, .o, .x,
             .x, .o, .o,
             .o, .x, .x
@@ -327,7 +327,7 @@ final class TicTacToeGameTests: XCTestCase {
     func testMinimaxReturnsValidMoveOnEmptyBoard() {
         let strategy = MinimaxStrategy()
 
-        let board: [TicTacToeEngine.Player?] = [
+        let board: [TicTacToeCore.Player?] = [
             .x, .o, .x,
             .x, .o, .o,
             .o, .x, nil
@@ -340,7 +340,7 @@ final class TicTacToeGameTests: XCTestCase {
 
     func testMinimaxPlaysWinningMoveWhenAvailable() {
         let strategy = MinimaxStrategy()
-        let board: [TicTacToeEngine.Player?] = [
+        let board: [TicTacToeCore.Player?] = [
             .o, .o, nil,
             .x, .x, nil,
             nil, nil, nil
@@ -353,7 +353,7 @@ final class TicTacToeGameTests: XCTestCase {
 
     func testMinimaxBlocksXWinningMove() {
         let strategy = MinimaxStrategy()
-        let board: [TicTacToeEngine.Player?] = [
+        let board: [TicTacToeCore.Player?] = [
             .x, .x, nil,
             .o, nil, nil,
             nil, nil, nil
@@ -372,14 +372,14 @@ final class TicTacToeGameTests: XCTestCase {
         }
 
         game.makeMove(at: 0)
-        XCTAssertEqual(game.board[0], .x)
+        XCTAssertEqual(game.snapshot.board[0], .x)
 
         XCTAssertTrue(game.canUndo)
         game.undoLastMove()
 
-        XCTAssertNil(game.board[0])
+        XCTAssertNil(game.snapshot.board[0])
 
-        if case .playing(let current) = game.state {
+        if case .playing(let current) = game.snapshot.state {
             XCTAssertEqual(current, .x)
         } else {
             XCTFail("Expected playing state")
@@ -395,16 +395,16 @@ final class TicTacToeGameTests: XCTestCase {
         game.makeMove(at: 0)
         advanceRunLoop()
 
-        XCTAssertEqual(game.board.filter { $0 == .x }.count, 1)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 1)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .x }.count, 1)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 1)
 
         XCTAssertTrue(game.canUndo)
         game.undoLastMove()
 
-        XCTAssertEqual(game.board.filter { $0 == .x }.count, 0)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .x }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 0)
 
-        if case .playing(let current) = game.state {
+        if case .playing(let current) = game.snapshot.state {
             XCTAssertEqual(current, .x)
         } else {
             XCTFail("Expected playing state")
@@ -419,16 +419,16 @@ final class TicTacToeGameTests: XCTestCase {
 
         game.tick()
         game.tick()
-        XCTAssertEqual(game.secondsLeft, 8)
+        XCTAssertEqual(game.snapshot.secondsLeft, 8)
 
         game.makeMove(at: 0) // X
-        XCTAssertEqual(game.secondsLeft, 10)
+        XCTAssertEqual(game.snapshot.secondsLeft, 10)
 
         game.tick()
-        XCTAssertEqual(game.secondsLeft, 9)
+        XCTAssertEqual(game.snapshot.secondsLeft, 9)
 
         game.undoLastMove()
-        XCTAssertEqual(game.secondsLeft, 10)
+        XCTAssertEqual(game.snapshot.secondsLeft, 10)
     }
 
     func testCannotUndoAfterWin() {
@@ -447,7 +447,7 @@ final class TicTacToeGameTests: XCTestCase {
         XCTAssertFalse(game.canUndo)
         game.undoLastMove()
 
-        if case .win(let winner, _) = game.state {
+        if case .win(let winner, _) = game.snapshot.state {
             XCTAssertEqual(winner, .x)
         } else {
             XCTFail("Expected win state")
@@ -464,7 +464,7 @@ final class TicTacToeGameTests: XCTestCase {
         game.undoLastMove()  // should cancel pending too
 
         advanceRunLoop(0.25)
-        XCTAssertEqual(game.board.filter { $0 == .o }.count, 0)
-        XCTAssertEqual(game.board.filter { $0 == .x }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .o }.count, 0)
+        XCTAssertEqual(game.snapshot.board.filter { $0 == .x }.count, 0)
     }
 }

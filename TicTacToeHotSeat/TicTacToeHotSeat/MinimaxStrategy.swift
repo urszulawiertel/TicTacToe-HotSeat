@@ -9,15 +9,15 @@ import Foundation
 
 struct MinimaxStrategy: AIStrategy {
 
-    private let ai: TicTacToeEngine.Player = .o
-    private let human: TicTacToeEngine.Player = .x
+    private let ai: TicTacToeCore.Player = .o
+    private let human: TicTacToeCore.Player = .x
     private let rules: GameRules
 
     init(rules: GameRules = GameRules()) {
         self.rules = rules
     }
 
-    func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
+    func chooseMove(board: [TicTacToeCore.Player?]) -> Int? {
         guard terminalScore(board, depth: 0) == nil else { return nil }
 
         let empties = emptyIndices(board)
@@ -44,18 +44,18 @@ struct MinimaxStrategy: AIStrategy {
 
 private extension MinimaxStrategy {
 
-    func emptyIndices(_ board: [TicTacToeEngine.Player?]) -> [Int] {
+    func emptyIndices(_ board: [TicTacToeCore.Player?]) -> [Int] {
         board.indices.filter { board[$0] == nil }
     }
 
-    func terminalScore(_ board: [TicTacToeEngine.Player?], depth: Int) -> Int? {
+    func terminalScore(_ board: [TicTacToeCore.Player?], depth: Int) -> Int? {
         if rules.isWinner(ai, board: board) { return 10 - depth }
         if rules.isWinner(human, board: board) { return depth - 10 }
         if emptyIndices(board).isEmpty { return 0 }
         return nil
     }
 
-    func minimax(board: [TicTacToeEngine.Player?], isMaximizing: Bool, depth: Int) -> Int {
+    func minimax(board: [TicTacToeCore.Player?], isMaximizing: Bool, depth: Int) -> Int {
         if let score = terminalScore(board, depth: depth) { return score }
 
         let empties = emptyIndices(board)

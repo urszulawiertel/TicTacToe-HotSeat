@@ -15,7 +15,7 @@ struct GameRules {
         [0,4,8], [2,4,6]
     ]
 
-    func isWinner(_ player: TicTacToeEngine.Player, board: [TicTacToeEngine.Player?]) -> Bool {
+    func isWinner(_ player: TicTacToeCore.Player, board: [TicTacToeCore.Player?]) -> Bool {
         winningLines.contains { line in
             board[line[0]] == player &&
             board[line[1]] == player &&
@@ -23,7 +23,7 @@ struct GameRules {
         }
     }
 
-    func winningLine(for player: TicTacToeEngine.Player, board: [TicTacToeEngine.Player?]) -> [Int]? {
+    func winningLine(for player: TicTacToeCore.Player, board: [TicTacToeCore.Player?]) -> [Int]? {
         for line in winningLines {
             let a = board[line[0]],
                 b = board[line[1]],
@@ -33,7 +33,7 @@ struct GameRules {
         return nil
     }
 
-    func winningMoveIndex(for player: TicTacToeEngine.Player, board: [TicTacToeEngine.Player?]) -> Int? {
+    func winningMoveIndex(for player: TicTacToeCore.Player, board: [TicTacToeCore.Player?]) -> Int? {
         for i in board.indices where board[i] == nil {
             var copy = board
             copy[i] = player

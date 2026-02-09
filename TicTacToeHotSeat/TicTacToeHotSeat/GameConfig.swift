@@ -11,8 +11,8 @@ struct GameConfig: Equatable {
     var moveTimeLimit: Int = 10
     var targetScore: Int = 3
 
-    var opponent: TicTacToeEngine.Opponent = .human
-    var aiDifficulty: TicTacToeEngine.AIDifficulty = .random
+    var opponent: TicTacToeCore.Opponent = .human
+    var aiDifficulty: TicTacToeCore.AIDifficulty = .random
 
     /// Controlled delay before AI makes its move (seconds).
     var aiMoveDelay: TimeInterval = 0.45

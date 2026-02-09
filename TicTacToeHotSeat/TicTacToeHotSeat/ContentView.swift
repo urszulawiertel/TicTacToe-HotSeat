@@ -8,6 +8,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    typealias Player = TicTacToeCore.Player
+    typealias GameState = TicTacToeCore.GameState
+    typealias MatchState = TicTacToeCore.MatchState
+    typealias Opponent = TicTacToeCore.Opponent
+    typealias AIDifficulty = TicTacToeCore.AIDifficulty
+
     @StateObject private var game = TicTacToeEngine(config: .default)
     @State private var uiConfig: GameConfig = .default
     @State private var activeAlert: ActiveAlert?
@@ -27,10 +33,10 @@ struct ContentView: View {
     }
 
     private var currentGhostSymbol: String? {
-        guard game.matchState == .inProgress else { return nil }
-        guard case .playing(let current) = game.state else { return nil }
+        guard game.snapshot.matchState == .inProgress else { return nil }
+        guard case .playing(let current) = game.snapshot.state else { return nil }
 
-        if game.config.opponent == .ai {
+        if game.snapshot.config.opponent == .ai {
             return current == .x ? current.rawValue : nil
         } else {
             return current.rawValue
@@ -42,13 +48,13 @@ struct ContentView: View {
             VStack(spacing: 14) {
 
                 HeaderView(
-                    statusText: game.state.statusText,
-                    targetScore: game.config.targetScore,
-                    xScore: game.xScore,
-                    oScore: game.oScore,
-                    secondsLeft: game.secondsLeft,
-                    timerEnabled: game.timerEnabled,
-                    canUndo: game.canUndo,
+                    statusText: game.snapshot.state.statusText,
+                    targetScore: game.snapshot.config.targetScore,
+                    xScore: game.snapshot.xScore,
+                    oScore: game.snapshot.oScore,
+                    secondsLeft: game.snapshot.secondsLeft,
+                    timerEnabled: game.snapshot.timerEnabled,
+                    canUndo: game.snapshot.canUndo,
                     onToggleTimer: { game.toggleTimer() },
                     onUndo: { game.undoLastMove() }
                 )
@@ -62,17 +68,17 @@ struct ContentView: View {
                 .padding(.horizontal)
 
                 Picker("Opponent", selection: $uiConfig.opponent) {
-                    Text("2 Players").tag(TicTacToeEngine.Opponent.human)
-                    Text("VS AI").tag(TicTacToeEngine.Opponent.ai)
+                    Text("2 Players").tag(Opponent.human)
+                    Text("VS AI").tag(Opponent.ai)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
                 if uiConfig.opponent == .ai {
                     Picker("Difficulty", selection: $uiConfig.aiDifficulty) {
-                        Text("Random").tag(TicTacToeEngine.AIDifficulty.random)
-                        Text("Smart").tag(TicTacToeEngine.AIDifficulty.smartBlockWin)
-                        Text("Minimax").tag(TicTacToeEngine.AIDifficulty.minimax)
+                        Text("Random").tag(AIDifficulty.random)
+                        Text("Smart").tag(AIDifficulty.smartBlockWin)
+                        Text("Minimax").tag(AIDifficulty.minimax)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
@@ -81,12 +87,12 @@ struct ContentView: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(0..<9, id: \.self) { index in
                         CellView(
-                            symbol: game.board[index]?.rawValue,
+                            symbol: game.snapshot.board[index]?.rawValue,
                             isHighlighted: game.isHighlightedCell(index),
                             ghostSymbol: currentGhostSymbol,
                             onTap: { game.makeMove(at: index) }
                         )
-                        .opacity(game.state.isGameOver ? 0.6 : 1.0)
+                        .opacity(game.snapshot.state.isGameOver ? 0.6 : 1.0)
                     }
                 }
                 .padding(.horizontal)
@@ -111,7 +117,7 @@ struct ContentView: View {
             }
 
             // sync: engine -> UI
-            .onChange(of: game.config) { newValue in
+            .onChange(of: game.snapshot.config) { newValue in
                 uiConfig = newValue
             }
 
@@ -120,13 +126,13 @@ struct ContentView: View {
                 case .gameOver:
                     return Alert(
                         title: Text("Game Over"),
-                        message: Text(game.state.statusText),
+                        message: Text(game.snapshot.state.statusText),
                         primaryButton: .default(Text("Play Again")) { game.resetBoard() },
                         secondaryButton: .destructive(Text("New Match")) { game.newMatch() }
                     )
                 case .matchOver:
                     let winnerText: String = {
-                        if case .finished(let winner) = game.matchState {
+                        if case .finished(let winner) = game.snapshot.matchState {
                             return "\(winner.rawValue) wins the match!"
                         }
                         return "Match finished"
@@ -138,11 +144,11 @@ struct ContentView: View {
                     )
                 }
             }
-            .onChange(of: game.state) { newState in
-                guard game.matchState == .inProgress else { return }
+            .onChange(of: game.snapshot.state) { newState in
+                guard game.snapshot.matchState == .inProgress else { return }
                 if newState.isGameOver { activeAlert = .gameOver }
             }
-            .onChange(of: game.matchState) { newValue in
+            .onChange(of: game.snapshot.matchState) { newValue in
                 if case .finished = newValue { activeAlert = .matchOver }
             }
         }

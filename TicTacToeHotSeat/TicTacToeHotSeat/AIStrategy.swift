@@ -8,13 +8,13 @@
 import Foundation
 
 protocol AIStrategy {
-    func chooseMove(board: [TicTacToeEngine.Player?]) -> Int?
+    func chooseMove(board: [TicTacToeCore.Player?]) -> Int?
 }
 
 // MARK: - Random
 
 struct RandomAIStrategy: AIStrategy {
-    func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
+    func chooseMove(board: [TicTacToeCore.Player?]) -> Int? {
         let empty = board.indices.filter { board[$0] == nil }
         return empty.randomElement()
     }
@@ -29,7 +29,7 @@ struct SmartBlockWinStrategy: AIStrategy {
         self.rules = rules
     }
 
-    func chooseMove(board: [TicTacToeEngine.Player?]) -> Int? {
+    func chooseMove(board: [TicTacToeCore.Player?]) -> Int? {
         if let win = rules.winningMoveIndex(for: .o, board: board) { return win }
         if let block = rules.winningMoveIndex(for: .x, board: board) { return block }
 
