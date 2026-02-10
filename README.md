@@ -2,6 +2,8 @@
 
 A simple Tic-Tac-Toe (3x3) iOS app built with SwiftUI, featuring multiple AI difficulty levels including an unbeatable Minimax AI.
 
+![Demo](Assets/demo.gif)
+
 ## 🚀 Features
 
 ### 🎮 Core Gameplay
@@ -34,11 +36,10 @@ AI strategies are fully separated from the engine via the `AIStrategy` abstracti
 - Resets timer state correctly
 
 ### 🧠 Architecture
-- `TicTacToeEngine` separated from UI
-- `GameClock` extracted
-- `MoveHistory` extracted
-- AI strategies extracted (`Random`, `SmartBlockWin`, `Minimax`)
-- Fully unit tested game logic
+- `TicTacToeCore` – pure game logic  
+- `TicTacToeEngine` – `ObservableObject` wrapper  
+- Snapshot pattern – UI reads immutable state  
+- AI strategies (`Random`, `SmartBlockWin`, `Minimax`) – pluggable via protocol  
 
 ### ✨ UX Enhancements
 - Ghost move preview (press & hold)
