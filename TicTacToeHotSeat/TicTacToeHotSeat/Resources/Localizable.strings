@@ -12,6 +12,7 @@
 "status.current" = "Current: %@";
 "status.win" = "%@ wins!";
 "status.draw" = "Draw!";
+"status.aiThinking" = "AI thinking…";
 
 /* Alerts */
 "alert.gameOver.title" = "Game Over";

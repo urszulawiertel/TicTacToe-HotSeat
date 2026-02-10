@@ -94,7 +94,8 @@ final class TicTacToeCore {
             secondsLeft: secondsLeft,
             xScore: xScore,
             oScore: oScore,
-            canUndo: canUndo
+            canUndo: canUndo,
+            isAITurn: isAITurn
         )
     }
 
@@ -235,6 +236,12 @@ final class TicTacToeCore {
 
     // MARK: - UI helpers
 
+    var isAITurn: Bool {
+        guard config.opponent == .ai else { return false }
+        guard case .playing(let current) = state else { return false }
+        return current == .o
+    }
+
     func isHighlightedCell(_ index: Int) -> Bool {
         guard case .win(_, let line) = state else { return false }
         return line.contains(index)
@@ -315,4 +322,5 @@ struct TicTacToeSnapshot: Equatable {
     let xScore: Int
     let oScore: Int
     let canUndo: Bool
+    let isAITurn: Bool
 }

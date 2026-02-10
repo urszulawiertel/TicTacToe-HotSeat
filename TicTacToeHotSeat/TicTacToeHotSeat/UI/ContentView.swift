@@ -32,6 +32,13 @@ struct ContentView: View {
         var id: String { self == .gameOver ? L10n.gameOverTitle : L10n.matchOverTitle }
     }
 
+    private var headerStatusText: String {
+        if game.snapshot.isAITurn {
+            return L10n.statusAIThinking
+        }
+        return game.snapshot.state.statusText
+    }
+
     private var currentGhostSymbol: String? {
         guard game.snapshot.matchState == .inProgress else { return nil }
         guard case .playing(let current) = game.snapshot.state else { return nil }
@@ -48,7 +55,7 @@ struct ContentView: View {
             VStack(spacing: 14) {
 
                 HeaderView(
-                    statusText: game.snapshot.state.statusText,
+                    statusText: headerStatusText,
                     targetScore: game.snapshot.config.targetScore,
                     xScore: game.snapshot.xScore,
                     oScore: game.snapshot.oScore,
@@ -93,6 +100,7 @@ struct ContentView: View {
                             onTap: { game.makeMove(at: index) }
                         )
                         .opacity(game.snapshot.state.isGameOver ? 0.6 : 1.0)
+                        .disabled(game.snapshot.isAITurn)
                     }
                 }
                 .padding(.horizontal)

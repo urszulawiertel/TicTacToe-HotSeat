@@ -29,6 +29,10 @@ enum L10n {
         NSLocalizedString("status.draw", comment: "")
     }
 
+    static var statusAIThinking: String {
+        NSLocalizedString("status.aiThinking", comment: "")
+    }
+
     // MARK: - Alerts
 
     static var gameOverTitle: String {
