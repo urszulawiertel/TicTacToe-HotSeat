@@ -1,3 +1,4 @@
+![Release](https://img.shields.io/badge/version-1.0.0-blue)
 # TicTacToe Hot-Seat (SwiftUI)
 
 A simple Tic-Tac-Toe (3x3) iOS app built with SwiftUI, featuring multiple AI difficulty levels including an unbeatable Minimax AI.
