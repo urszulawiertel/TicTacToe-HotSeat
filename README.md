@@ -2,7 +2,11 @@
 
 A simple Tic-Tac-Toe (3x3) iOS app built with SwiftUI, featuring multiple AI difficulty levels including an unbeatable Minimax AI.
 
-![Demo](Assets/demo.gif)
+## 🎮 Demo
+
+<p align="center">
+  <img src="Assets/demo.gif" width="350" />
+</p>
 
 ## 🚀 Features
 
